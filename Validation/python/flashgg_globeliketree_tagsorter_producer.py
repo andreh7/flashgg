@@ -41,9 +41,9 @@ process.load("JetMETCorrections.Configuration.JetCorrectionServices_cff")
 process.load("flashgg/Taggers/flashggTagSequence_cfi")
 
 process.flashggTagSequence.remove(process.flashggPreselectedDiPhotons)
-process.flashggTagSorter.massCutUpper=cms.untracked.double(100000.)
-process.flashggTagSorter.massCutLower=cms.untracked.double(100.)
-process.flashggUntagged.Boundaries=cms.untracked.vdouble(-99999.,0.31,0.62,0.86,0.98)
+process.flashggTagSorter.massCutUpper=cms.double(100000.)
+process.flashggTagSorter.massCutLower=cms.double(100.)
+process.flashggUntagged.Boundaries=cms.vdouble(-99999.,0.31,0.62,0.86,0.98)
 
 process.load("flashgg/Taggers/flashggTagTester_cfi")
 
