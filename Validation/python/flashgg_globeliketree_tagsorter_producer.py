@@ -163,6 +163,11 @@ process.commissioning = cms.EDAnalyzer('FlashggFlashggTreeMakerWithTagSorter',
                                        #puBins = cms.int32(50),
                                        #minpu = cms.double(0),
                                        #maxpu = cms.double(100),
+
+				       triggerResults = cms.untracked.InputTag('TriggerResults::HLT'),
+				       pathNames = cms.untracked.vstring("HLT_Diphoton30_18_R9Id_OR_IsoCaloId_AND_HE_R9Id_Mass95_v*",
+									 "HLT_Diphoton30PV_18PV_R9Id_AND_IsoCaloId_AND_HE_R9Id_DoublePixelVeto_Mass55_v*",
+									 "HLT_Diphoton30EB_18EB_R9Id_OR_IsoCaloId_AND_HE_R9Id_DoublePixelVeto_Mass55_v*")
                                        )
 
 process.TFileService = cms.Service("TFileService",
