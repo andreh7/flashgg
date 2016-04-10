@@ -78,10 +78,12 @@ private:
     EDGetTokenT< VertexCandidateMap > vertexCandidateMapTokenAOD_;
     //EDGetTokenT<View<flashgg::Jet> > jetTokenDz_;
     std::vector<edm::InputTag> inputTagJets_;
+    std::vector<EDGetTokenT<edm::View<flashgg::Jet> > > inputTagJetsTokens_;
     EDGetTokenT<edm::View<flashgg::DiPhotonCandidate> >  diPhotonToken_;
     EDGetTokenT<edm::View<pat::MET> >  METToken_;
     EDGetTokenT<edm::View<PileupSummaryInfo> >  PileUpToken_;
-    edm::InputTag rhoFixedGrid_;
+    EDGetTokenT<double> rhoFixedGridToken_;
+    EDGetTokenT<edm::MergeableDouble> totWeightToken_;
 
     TTree *flashggTreeWithTagSorter;
     TTree *auxTree;
@@ -254,6 +256,10 @@ FlashggTreeMakerWithTagSorter::FlashggTreeMakerWithTagSorter( const edm::Paramet
     diPhotonToken_( consumes<View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "DiPhotonTag" ) ) ),
     METToken_( consumes<View<pat::MET> >( iConfig.getUntrackedParameter<InputTag> ( "METTag", InputTag( "slimmedMETs" ) ) ) ),
     PileUpToken_( consumes<View<PileupSummaryInfo> >( iConfig.getUntrackedParameter<InputTag> ( "PileUpTag", InputTag( "slimmedAddPileupInfo" ) ) ) ),
+    rhoFixedGridToken_( consumes<double> (iConfig.getParameter<edm::InputTag>( "rhoFixedGridCollection" ))),
+
+    totWeightToken_(consumes<edm::MergeableDouble, edm::InLumi>(edm::InputTag("weightsCount","totalWeight"))),
+
     itype( iConfig.getParameter<int> ( "sampleIndex" ) ),
     full_weight( iConfig.getParameter<double> ( "lumiWeight" ) ),
     TagSorterToken_( consumes<edm::OwnVector<flashgg::DiPhotonTagBase> >( iConfig.getUntrackedParameter<InputTag> ( "TagSorter",
@@ -265,7 +271,10 @@ FlashggTreeMakerWithTagSorter::FlashggTreeMakerWithTagSorter( const edm::Paramet
     puData_( iConfig.getParameter<std::vector<double> > ( "dataPu" ) ),
     puMC_  ( iConfig.getParameter<std::vector<double> > ( "mcPu" ) )
 {
-    rhoFixedGrid_ = iConfig.getParameter<edm::InputTag>( "rhoFixedGridCollection" );
+    // get tokens for jet collections
+    for (unsigned i = 0; i < inputTagJets_.size(); ++i)
+        inputTagJetsTokens_.push_back(consumes<edm::View<flashgg::Jet> >(inputTagJets_[i]));
+
     totalGenWeight_ = 0.;
 
     unsigned int nbins = std::min(puData_.size(), puMC_.size());
@@ -283,7 +292,7 @@ FlashggTreeMakerWithTagSorter::~FlashggTreeMakerWithTagSorter()
 void FlashggTreeMakerWithTagSorter::endLuminosityBlock(edm::LuminosityBlock const& iLumi, edm::EventSetup const& iSetup) {
     
     edm::Handle<edm::MergeableDouble> totWeight;
-    iLumi.getByLabel(edm::InputTag("weightsCount","totalWeight"), totWeight);
+    iLumi.getByToken(totWeightToken_, totWeight);
     if (totWeight.isValid()) 
         totalGenWeight_ += (double)totWeight->value;
 }
@@ -336,7 +345,7 @@ FlashggTreeMakerWithTagSorter::analyze( const edm::Event &iEvent, const edm::Eve
     iEvent.getByToken( METToken_, METs );
 
     Handle<double> rhoHandle; // the old way for now...move to getbytoken?
-    iEvent.getByLabel( rhoFixedGrid_, rhoHandle );
+    iEvent.getByToken(rhoFixedGridToken_, rhoHandle );
 
     //Slightly unusal way of accessing selected Tag from TagSorter, since a pointer is saved rather than a vector.
     Handle<edm::OwnVector<flashgg::DiPhotonTagBase> > TagSorter;
@@ -410,7 +419,7 @@ FlashggTreeMakerWithTagSorter::analyze( const edm::Event &iEvent, const edm::Eve
         Handle<View<flashgg::Jet> > jetsDz;        
         //JetCollectionVector Jets( inputTagJets_.size() );
         //for( size_t j = 0; j < inputTagJets_.size(); ++j ) {
-        iEvent.getByLabel( inputTagJets_[jetIndex], jetsDz );
+        iEvent.getByToken( inputTagJetsTokens_[jetIndex], jetsDz );
         //}
         
         for( UInt_t jetLoop = 0; jetLoop < jetsDz->size() ; jetLoop++ ) {
