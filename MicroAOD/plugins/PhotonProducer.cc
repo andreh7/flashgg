@@ -405,7 +405,7 @@ namespace flashgg {
 		const CaloTopology *ecalTopology_ = & (*theCaloTopology);  
 
 		// code inspired by / copied from https://github.com/cms-sw/cmssw/blob/0397259dd747cee94b68928f17976224c037057a/PhysicsTools/PatAlgos/plugins/PATPhotonProducer.cc#L203
-		std::vector<DetId> selectedCells;
+		std::set<uint32_t> selectedCells;
 		bool barrel = photon.isEB();
 
 		BOOST_FOREACH(const edm::Ptr<reco::CaloCluster> &cluster, clusters)
@@ -422,19 +422,15 @@ namespace flashgg {
 			std::vector<DetId> dets5x5 = (barrel) ? 
 				ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalBarrel)->getWindow(seed,5,5) :
 				ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalEndcap)->getWindow(seed,5,5);
-
-			selectedCells.insert(selectedCells.end(), dets5x5.begin(), dets5x5.end());
+				
+			std::copy(dets5x5.begin(), dets5x5.end(), std::inserter(selectedCells, selectedCells.end()));
 
 			// add those crystals otherwise associated to the cluster
 			for (const std::pair<DetId, float> &hit : cluster->hitsAndFractions()) 
-				selectedCells.push_back(hit.first);
+				selectedCells.insert(hit.first);
 
 		} // loop over clusters
 
-		// remove duplicates
-		std::sort(selectedCells.begin(),selectedCells.end());
-		std::unique(selectedCells.begin(),selectedCells.end());
-		
 		Handle<EcalRecHitCollection> recHitsHandle;
 
 		const EcalRecHitCollection *recHits = NULL;
@@ -451,10 +447,9 @@ namespace flashgg {
 
 		EcalRecHitCollection selectedRecHits;
 
-		unsigned nSelectedCells = selectedCells.size();
-		for (unsigned icell = 0 ; icell < nSelectedCells ; ++icell) 
+		BOOST_FOREACH(uint32_t cell, selectedCells)
 		{
-			EcalRecHitCollection::const_iterator  it = recHits->find( selectedCells[icell] );
+			EcalRecHitCollection::const_iterator  it = recHits->find( cell );
 			if ( it != recHits->end() )
 				selectedRecHits.push_back(*it);
 		}
