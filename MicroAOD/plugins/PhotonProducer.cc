@@ -415,15 +415,18 @@ namespace flashgg {
 			// see e.g. https://github.com/cms-sw/cmssw/blob/CMSSW_7_4_X/DataFormats/Common/interface/Ptr.h
 			// cout << "available=" << cluster.isAvailable() << endl;
 
-			// get seed crystal of the (basic) cluster
-			DetId seed = lazyTools.getMaximum(*cluster).first;
-
-			// now get all crystals in a 5x5 window
-			std::vector<DetId> dets5x5 = (barrel) ? 
-				ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalBarrel)->getWindow(seed,5,5) :
-				ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalEndcap)->getWindow(seed,5,5);
+			if (false)
+			{
+				// get seed crystal of the (basic) cluster
+				DetId seed = lazyTools.getMaximum(*cluster).first;
 				
-			std::copy(dets5x5.begin(), dets5x5.end(), std::inserter(selectedCells, selectedCells.end()));
+				// now get all crystals in a 5x5 window
+				std::vector<DetId> dets5x5 = (barrel) ? 
+					ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalBarrel)->getWindow(seed,5,5) :
+					ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalEndcap)->getWindow(seed,5,5);
+				
+				std::copy(dets5x5.begin(), dets5x5.end(), std::inserter(selectedCells, selectedCells.end()));
+			}
 
 			// add those crystals otherwise associated to the cluster
 			for (const std::pair<DetId, float> &hit : cluster->hitsAndFractions()) 
