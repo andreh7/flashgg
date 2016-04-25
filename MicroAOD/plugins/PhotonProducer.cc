@@ -23,6 +23,11 @@
 
 #include "RecoEgamma/EgammaTools/interface/EffectiveAreas.h"
 
+#include "Geometry/CaloTopology/interface/CaloTopology.h"
+#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
+
+#include <boost/foreach.hpp>
+
 using namespace std;
 using namespace edm;
 using reco::PFCandidate;
@@ -45,6 +50,9 @@ namespace flashgg {
         PhotonProducer( const ParameterSet & );
     private:
         void produce( Event &, const EventSetup & ) override;
+
+        /** embeds rechits in the given photon */
+        void embedRecHitsIntoPhoton(const Event &iEvent, const EventSetup &iSetup, pat::Photon &photon);
 
         EDGetTokenT<View<pat::Photon> > photonToken_;
         EDGetTokenT<View<pat::PackedCandidate> > pfcandidateToken_;
@@ -89,6 +97,9 @@ namespace flashgg {
         double _phoIsoCutoff;
 
         edm::EDGetTokenT<edm::ValueMap<float> > egmMvaValuesMapToken_;
+
+        /** whether or not to embed rechits into the Photon objects */
+        const bool embedRecHits;
     };
 
 
@@ -108,7 +119,8 @@ namespace flashgg {
         _effectiveAreas((iConfig.getParameter<edm::FileInPath>("effAreasConfigFile")).fullPath()),
         _phoIsoPtScalingCoeff(iConfig.getParameter<std::vector<double >>("phoIsoPtScalingCoeff")),
         _phoIsoCutoff(iConfig.getParameter<double>("phoIsoCutoff")),
-        egmMvaValuesMapToken_( consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("egmMvaValuesMap")) )
+        egmMvaValuesMapToken_( consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("egmMvaValuesMap")) ),
+        embedRecHits(iConfig.getParameter<bool>("embedRecHits"))
     {
 
         //        electronLabel_ = iConfig.getParameter<string>( "elecLabel" );
@@ -352,6 +364,9 @@ namespace flashgg {
 
             phoTools_.removeOverlappingCandidates( doOverlapRemovalForIsolation_ );
 
+            if (embedRecHits)
+                embedRecHitsIntoPhoton(evt, iSetup, fg);
+
             photonColl->push_back( fg );
         }
 
@@ -359,9 +374,104 @@ namespace flashgg {
 
         /// orig_collection = 0;
     }
+
+	void PhotonProducer::embedRecHitsIntoPhoton(const Event &iEvent, const EventSetup &iSetup, pat::Photon &photon)
+	{
+		// see e.g. https://github.com/cms-sw/cmssw/blob/CMSSW_7_4_X/DataFormats/PatCandidates/interface/Photon.h
+
+		// photon.basicClusters(..) seems not to return anything, so we need to go via the supercluster
+		// (see e.g. https://github.com/cms-sw/cmssw/blob/CMSSW_7_4_X/DataFormats/EgammaReco/interface/SuperCluster.h
+
+		// TODO: for endcap we can also look at preshowerClusters()
+
+		// code is similar to what pat::PhotonProducer::produce(..) does
+		// when embedding rechits
+		const reco::CaloClusterPtrVector &clusters = photon.superCluster()->clusters();
+
+		if (! clusters.isAvailable())
+		{
+			cout << "WARNING: cluster collection not available for photon with"
+				 << " run=" << iEvent.id().run()
+				 << " lumisec=" << iEvent.luminosityBlock()
+				 << " event=" << iEvent.id().event()
+				 << " et=" << photon.et()
+				 << " eta=" << photon.eta()
+				 << endl;
+			return;
+		}
+
+		// TODO: should we do this in analyze(..) instead so we do
+		// it only once per event instead of once per photon ?
+		EcalClusterLazyTools lazyTools(iEvent, iSetup, 
+									   ecalHitEBToken_,
+									   ecalHitEEToken_
+									   );
+
+		edm::ESHandle<CaloTopology> theCaloTopology;
+		iSetup.get<CaloTopologyRecord>().get(theCaloTopology);
+		const CaloTopology *ecalTopology_ = & (*theCaloTopology);  
+
+		// code inspired by / copied from https://github.com/cms-sw/cmssw/blob/0397259dd747cee94b68928f17976224c037057a/PhysicsTools/PatAlgos/plugins/PATPhotonProducer.cc#L203
+		std::vector<DetId> selectedCells;
+		bool barrel = photon.isEB();
+
+		BOOST_FOREACH(const edm::Ptr<reco::CaloCluster> &cluster, clusters)
+		{
+			// see https://github.com/cms-sw/cmssw/blob/CMSSW_7_4_X/DataFormats/CaloRecHit/interface/CaloCluster.h
+
+			// see e.g. https://github.com/cms-sw/cmssw/blob/CMSSW_7_4_X/DataFormats/Common/interface/Ptr.h
+			// cout << "available=" << cluster.isAvailable() << endl;
+
+			// get seed crystal of the (basic) cluster
+			DetId seed = lazyTools.getMaximum(*cluster).first;
+
+			// now get all crystals in a 5x5 window
+			std::vector<DetId> dets5x5 = (barrel) ? 
+				ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalBarrel)->getWindow(seed,5,5) :
+				ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalEndcap)->getWindow(seed,5,5);
+
+			selectedCells.insert(selectedCells.end(), dets5x5.begin(), dets5x5.end());
+
+			// add those crystals otherwise associated to the cluster
+			for (const std::pair<DetId, float> &hit : cluster->hitsAndFractions()) 
+				selectedCells.push_back(hit.first);
+
+		} // loop over clusters
+
+		// remove duplicates
+		std::sort(selectedCells.begin(),selectedCells.end());
+		std::unique(selectedCells.begin(),selectedCells.end());
+		
+		Handle<EcalRecHitCollection> recHitsHandle;
+
+		const EcalRecHitCollection *recHits = NULL;
+		if ( photon.superCluster()->seed()->hitsAndFractions().at(0).first.subdetId()==EcalBarrel ) 
+		{
+			iEvent.getByToken(ecalHitEBToken_, recHitsHandle);
+			recHits = recHitsHandle.product();
+		}
+		else if ( photon.superCluster()->seed()->hitsAndFractions().at(0).first.subdetId()==EcalEndcap ) 
+		{
+			iEvent.getByToken(ecalHitEEToken_, recHitsHandle);
+			recHits = recHitsHandle.product();
+		}
+
+		EcalRecHitCollection selectedRecHits;
+
+		unsigned nSelectedCells = selectedCells.size();
+		for (unsigned icell = 0 ; icell < nSelectedCells ; ++icell) 
+		{
+			EcalRecHitCollection::const_iterator  it = recHits->find( selectedCells[icell] );
+			if ( it != recHits->end() )
+				selectedRecHits.push_back(*it);
+		}
+
+		selectedRecHits.sort();
+
+		// this actually makes a copy of the collection (not just the pointer)
+		photon.embedRecHits(&selectedRecHits);    
+	}
 }
-
-
 
 typedef flashgg::PhotonProducer FlashggPhotonProducer;
 DEFINE_FWK_MODULE( FlashggPhotonProducer );
