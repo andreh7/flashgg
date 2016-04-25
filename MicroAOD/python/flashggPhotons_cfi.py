@@ -29,5 +29,7 @@ flashggPhotons = cms.EDProducer('FlashggPhotonProducer',
 
 				convTag = cms.InputTag('reducedEgamma','reducedConversions'),
 				beamSpotTag = cms.InputTag('offlineBeamSpot'),
-				elecTag = cms.InputTag("slimmedElectrons")
+				elecTag = cms.InputTag("slimmedElectrons"),
+
+				embedRecHits = cms.bool(False),
                               )
