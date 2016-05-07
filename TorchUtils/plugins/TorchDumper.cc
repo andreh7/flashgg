@@ -175,10 +175,12 @@ namespace flashgg {
         std::vector<std::vector<RecHitData> > barrelRecHits;
         std::vector<float> barrelWeights;
         std::vector<float> barrelLabels; // 1 = prompt photon, 0 = fake or non-prompt photon
+        std::vector<float> barrelMVAid; // official MVA id
 
         std::vector<std::vector<RecHitData> > endcapRecHits;
         std::vector<float> endcapWeights;
         std::vector<float> endcapLabels; // 1 = prompt photon, 0 = fake or non-prompt photon
+        std::vector<float> endcapMVAid; // official MVA id
 
         //----------------------------------------
 
@@ -291,7 +293,7 @@ namespace flashgg {
         }
 
 
-        void addPhoton(const flashgg::Photon &photon, float weight)
+        void addPhoton(const flashgg::Photon &photon, float weight, float mvaID)
         {
             float label = photon.genMatchType() == flashgg::Photon::kPrompt ? 1 : 0;
 
@@ -312,6 +314,7 @@ namespace flashgg {
                 barrelRecHits.push_back(rechits);
                 barrelWeights.push_back(weight);
                 barrelLabels.push_back(label);
+                barrelMVAid.push_back(mvaID);
             }
             else
             {
@@ -326,7 +329,7 @@ namespace flashgg {
                 endcapRecHits.push_back(rechits);
                 endcapWeights.push_back(weight);
                 endcapLabels.push_back(label);
-
+                endcapMVAid.push_back(mvaID);
             }
         }
 
@@ -367,14 +370,16 @@ namespace flashgg {
         void writeTorchData(const std::string &fname, const std::vector<std::vector<RecHitData> > &rechits,
                             unsigned windowHalfWidth, unsigned windowHalfHeight,
                             const std::vector<float> &labels,
-                            const std::vector<float> &weights)
+                            const std::vector<float> &weights,
+                            const std::vector<float> &mvaids
+                            )
         {
             // write a dict/table with 
             //  X = rechits
             //  y = labels
             //  weight = weights
-            // TODO: mvaid (for comparison)
-            const unsigned tableSize = 3;
+            //  mvaid (for comparison)
+            const unsigned tableSize = 4;
 
             std::ofstream os(fname.c_str());
 
@@ -388,6 +393,7 @@ namespace flashgg {
             writeInt(os, MAGIC_STRING); writeString(os, "X");      writeRecHits(os, objectIndex, rechits, windowHalfWidth, windowHalfHeight);
             writeInt(os, MAGIC_STRING); writeString(os, "y");      writeFloatVector(os, objectIndex, labels);
             writeInt(os, MAGIC_STRING); writeString(os, "weight"); writeFloatVector(os, objectIndex, weights);
+            writeInt(os, MAGIC_STRING); writeString(os, "mvaid");  writeFloatVector(os, objectIndex, mvaids);
         }
 
     };
@@ -417,8 +423,8 @@ namespace flashgg {
             // TODO: check if this corresponds to the final event weight ?!
             float weight = diphoton.centralWeight();
 
-            addPhoton(*diphoton.leadingPhoton(), weight);
-            addPhoton(*diphoton.subLeadingPhoton(), weight);
+            addPhoton(*diphoton.leadingPhoton(), weight, diphoton.leadingView()->phoIdMvaWrtChosenVtx());
+            addPhoton(*diphoton.subLeadingPhoton(), weight, diphoton.subLeadingView()->phoIdMvaWrtChosenVtx());
 
             // only consider the first pair (how are they sorted ?)
             break;
@@ -437,13 +443,15 @@ namespace flashgg {
         writeTorchData("/tmp/barrel-photons.t7", 
                        barrelRecHits, barrelWindowHalfWidth, barrelWindowHalfHeight, 
                        barrelLabels, 
-                       barrelWeights);
+                       barrelWeights,
+                       barrelMVAid);
 
         // endcap
         writeTorchData("/tmp/endcap-photons.t7", 
                        endcapRecHits, endcapWindowHalfWidth, endcapWindowHalfHeight,
                        endcapLabels,
-                       endcapWeights);
+                       endcapWeights,
+                       endcapMVAid);
     }
 
     void
