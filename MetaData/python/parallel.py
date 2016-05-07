@@ -275,7 +275,7 @@ class WorkNodeJob(object):
         if self.copy_proxy and self.runner.copyProxy():
             try:
                 proxy = BatchRegistry.getProxy()
-                script += "scp -p %s .\n" % proxy
+                script += "scp -o StrictHostKeyChecking=no -p %s .\n" % proxy
                 proxyname = os.path.basename(proxy.split(":")[1])
                 script += "export X509_USER_PROXY=$PWD/%s\n" % proxyname
                 if WorkNodeJob.nwarnings > 0:
