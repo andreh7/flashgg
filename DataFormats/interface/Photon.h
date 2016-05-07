@@ -167,6 +167,8 @@ namespace flashgg {
         bool checkStatusFlag( rechitSummaryFlags_t ibit) const { return (hasUserInt("rechitStatus")?userInt("rechitStatus")&(0x1<<ibit):0); };
         reco::SuperCluster* getSuperCluster() { return &superCluster_[0];};
 
+        float mvaId2() const;
+
     private:
         void setEnergyAtStep( std::string key, float val ); // updateEnergy should be used from outside the class to access this
         float const findVertexFloat( const edm::Ptr<reco::Vertex> &vtx, const std::map<edm::Ptr<reco::Vertex>, float> &mp, bool lazy ) const;
