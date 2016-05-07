@@ -155,7 +155,7 @@ namespace flashgg {
         virtual void analyze( const edm::Event &, const edm::EventSetup & ) override;
         virtual void endJob() override;
 
-        edm::EDGetTokenT<edm::View<flashgg::Photon> > photonToken_;
+        edm::EDGetTokenT<edm::View<flashgg::DiPhotonCandidate> > diphotonToken_;
         
         /** window sizes */
         const unsigned barrelWindowHalfWidth = 3;
@@ -373,7 +373,7 @@ namespace flashgg {
 // ******************************************************************************************
 
     TorchDumper::TorchDumper( const edm::ParameterSet &iConfig ):
-        photonToken_( consumes<edm::View<flashgg::Photon> >( iConfig.getParameter<InputTag> ( "photons" ) ) )
+        diphotonToken_( consumes<edm::View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "diphotonsInput" ) ) )
     {
     }
 
@@ -385,16 +385,20 @@ namespace flashgg {
     void
     TorchDumper::analyze( const edm::Event &iEvent, const edm::EventSetup &iSetup )
     {
-        Handle<edm::View<flashgg::Photon> > photons;
-        iEvent.getByToken( photonToken_, photons );
+        Handle<edm::View<flashgg::DiPhotonCandidate> > diphotons;
+        iEvent.getByToken( diphotonToken_, diphotons );
 
         //for ( auto photon = photons.product()->begin(); photon != photons.product()->end(); ++photon)
-        for ( auto photon : *photons.product()) {
+        for ( auto diphoton : *diphotons.product()) {
             // TODO: should we take the square root of the event weight for photons ?
             // TODO: check if this corresponds to the final event weight ?!
-            float weight = photon.centralWeight();
+            float weight = diphoton.centralWeight();
 
-            addPhoton(photon, weight);
+            addPhoton(*diphoton.leadingPhoton(), weight);
+            addPhoton(*diphoton.subLeadingPhoton(), weight);
+
+            // only consider the first pair (how are they sorted ?)
+            break;
         }
     } // analyze
 
