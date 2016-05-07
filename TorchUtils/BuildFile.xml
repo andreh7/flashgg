@@ -1,0 +1,13 @@
+<use   name="DataFormats/Candidate"/>
+<use   name="DataFormats/PatCandidates"/>
+<use   name="DataFormats/Common"/>
+<use   name="flashgg/DataFormats"/>
+<use   name="flashgg/MicroAOD"/>
+<use   name="DataFormats/VertexReco"/>
+<use   name="FWCore/Utilities"/>
+<use   name="FWCore/Common"/>
+<use   name="CommonTools/Utils"/>
+<use   name="boost_python"/>
+<export>
+  <lib   name="1"/>
+</export>
