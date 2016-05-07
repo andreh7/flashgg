@@ -1,5 +1,7 @@
 #include "flashgg/DataFormats/interface/Photon.h"
 #include "FWCore/Utilities/interface/Exception.h"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include <limits>
 
 using namespace flashgg;
@@ -319,6 +321,122 @@ float Photon::genDeltaR() const
         
     return deltaR(this->p4(), matchedGenPhoton()->p4());
 }
+
+extern void evaluateNetwork(const std::vector<float> &input, std::vector<float> &output);
+
+float Photon::mvaId2() const
+{
+    // half window sizes (rounded down), at the same
+    // time these are the coordinates of the center
+    const unsigned halfWidth  = 3; // eta direction in the barrel
+    const unsigned halfHeight = 11; // phi direction in the barrel
+
+    // dimensions of window
+    const unsigned width  = 2 * halfWidth + 1;
+    const unsigned height = 2 * halfHeight + 1;
+
+    // our network produces values between 0 and 1,
+    // keeping the value close to the valid range
+    // (as opposed to e.g. -1000)
+    // makes it possible to see the distribution
+    // with a simple click in the TBrowser
+    // even when there are invalid values
+    const float invalidValue = -1;
+
+    // check if we have rechits
+    if (! embeddedRecHits_)
+        return invalidValue;
+
+    // rechit energies 
+    // indexing is: width_index * height + height_index
+    std::vector<float> energiesArray(width * height, 0);
+
+
+    // rechit with the highest energy
+    const EcalRecHit *maxRecHit = NULL;
+
+    std::vector<const EcalRecHit*> ecalBarrelRecHits;
+
+    // find the rechit with the maximum energy
+    for (const EcalRecHit &recHit : recHits_)
+    {
+        const DetId *detid = &recHit.detid();
+
+        // check if this is ECAL barrel
+        if (detid->det() != DetId::Ecal)
+            // this actually should not happen ?
+            continue;
+
+        if (detid->subdetId() != EcalBarrel)
+            continue;
+
+        ecalBarrelRecHits.push_back(&recHit);
+        
+        // update maximum energy seen
+        if (maxRecHit == NULL || recHit.energy() > maxRecHit->energy())
+            maxRecHit = &recHit;
+
+    } // loop over rechits
+
+    if (maxRecHit == NULL)
+        // no ecal barrel rechits found
+        return invalidValue;
+
+    // TODO: check if all rechits were ECAL barrel rechits or if
+    //       there were some 
+
+    // divide by maximum rechit energy
+    float maxEnergy = maxRecHit->energy();
+
+    EBDetId maxDetId(maxRecHit->detid());
+    int iMax = maxDetId.ieta();
+    int jMax = maxDetId.iphi();
+
+    // TO CHECK:
+    // iphi values go from 1 to 360 ?
+    // ieta values go from 1 to 85 and from -1 to -85 ?
+
+    for (const EcalRecHit *recHit : ecalBarrelRecHits)
+    {
+        // TODO: review the phi coordinate (which probably is in the range 1..360)
+        // TODO: review the eta coordinate for which probably zero does not exist
+        // calculate relative coordinate
+        EBDetId thisDetId(recHit->detid());
+
+        // WORKAROUND: note thte +1 everywhere since it looks like
+        //             in the torch training we had the maximum
+        //             off by one...
+        int ii = thisDetId.ieta() - iMax + halfWidth + 1; 
+        int jj = thisDetId.iphi() - jMax + halfHeight + 1;
+
+        // normalize the phi coordinate
+        while (jj > 179)
+            jj -= 360;
+        while (jj < -180)
+            jj += 360;
+
+        // check if the rechit is within the window
+        if (ii < 0 || ii >= (int)width || jj < 0 || jj >= (int)height) 
+            // rechit is outside the window
+            continue;
+
+        float energy = recHit->energy();           
+        if (maxEnergy > 0)
+            energy /= maxEnergy;
+
+        // store the rechit's relative energy in the input vector
+        energiesArray[ jj + height * ii] = energy;
+    }    
+
+    // run the network
+   std::vector<float> networkOutput;
+
+   evaluateNetwork(energiesArray, networkOutput);
+   assert(networkOutput.size() == 1);
+
+   return networkOutput[0];
+}
+
 
 // Local Variables:
 // mode:c++
