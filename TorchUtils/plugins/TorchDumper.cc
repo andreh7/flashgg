@@ -41,8 +41,9 @@ using namespace edm;
 
 namespace flashgg {
 
+    const unsigned MAGIC_STRING = 2;
+    const unsigned MAGIC_TABLE = 3;
     const unsigned MAGIC_TORCH = 4;
-
 
     inline void writeInt(std::ostream &os, int32_t value)
     {
@@ -68,12 +69,10 @@ namespace flashgg {
         os.write((const char*) &str[0], len);
     }
 
-    void writeFloatTensor(std::ostream &os, const std::vector<unsigned> &sizes, const std::vector<float> &data)
+    void writeFloatTensor(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<float> &data)
     {
         // data must be stored in the order such the an increase of the index in the last dimension
         // by one corresponds to an indcreas of the index into data by one etc.
-
-        unsigned objectIndex = 1;
 
         writeInt(os, MAGIC_TORCH);
 
@@ -331,7 +330,7 @@ namespace flashgg {
             }
         }
 
-        void writeRecHits(const std::string &fname, const std::vector<std::vector<RecHitData> > &rechits, int windowHalfWidth, int windowHalfHeight)
+        void writeRecHits(std::ostream &os, unsigned &objectIndex, const std::vector<std::vector<RecHitData> > &rechits, int windowHalfWidth, int windowHalfHeight)
         {
             std::vector<unsigned> sizes;
             sizes.push_back(rechits.size());
@@ -353,20 +352,44 @@ namespace flashgg {
 
             } // loop over events
 
-            std::ofstream fout(fname.c_str());
-
-            writeFloatTensor(fout, sizes, data);
+            writeFloatTensor(os, objectIndex, sizes, data);
         }
 
         /** use this e.g. for labels and weights */
-        void writeFloatVector(const std::string &fname, const std::vector<float> &data)
+        void writeFloatVector(std::ostream &os, unsigned &objectIndex, const std::vector<float> &data)
         {
             std::vector<unsigned> sizes;
             sizes.push_back(data.size());
-            std::ofstream fout(fname.c_str());
 
-            writeFloatTensor(fout, sizes, data);
+            writeFloatTensor(os, objectIndex, sizes, data);
         }
+
+        void writeTorchData(const std::string &fname, const std::vector<std::vector<RecHitData> > &rechits,
+                            unsigned windowHalfWidth, unsigned windowHalfHeight,
+                            const std::vector<float> &labels,
+                            const std::vector<float> &weights)
+        {
+            // write a dict/table with 
+            //  X = rechits
+            //  y = labels
+            //  weight = weights
+            // TODO: mvaid (for comparison)
+            const unsigned tableSize = 3;
+
+            std::ofstream os(fname.c_str());
+
+            writeInt(os, MAGIC_TABLE);
+
+            unsigned objectIndex = 1;
+            writeInt(os, objectIndex++);
+            
+            writeInt(os, tableSize);
+
+            writeInt(os, MAGIC_STRING); writeString(os, "X");      writeRecHits(os, objectIndex, rechits, windowHalfWidth, windowHalfHeight);
+            writeInt(os, MAGIC_STRING); writeString(os, "y");      writeFloatVector(os, objectIndex, labels);
+            writeInt(os, MAGIC_STRING); writeString(os, "weight"); writeFloatVector(os, objectIndex, weights);
+        }
+
     };
 
 // ******************************************************************************************
@@ -411,14 +434,16 @@ namespace flashgg {
     TorchDumper::endJob()
     {
         // barrel
-        writeRecHits("/tmp/barrel-photons-rechits.t7", barrelRecHits, barrelWindowHalfWidth, barrelWindowHalfHeight);
-        writeFloatVector("/tmp/barrel-photons-labels.t7", barrelLabels);
-        writeFloatVector("/tmp/barrel-photons-weights.t7", barrelWeights);
+        writeTorchData("/tmp/barrel-photons.t7", 
+                       barrelRecHits, barrelWindowHalfWidth, barrelWindowHalfHeight, 
+                       barrelLabels, 
+                       barrelWeights);
 
         // endcap
-        writeRecHits("/tmp/endcap-photons-rechits.t7", endcapRecHits, endcapWindowHalfWidth, endcapWindowHalfHeight);
-        writeFloatVector("/tmp/endcap-photons-labels.t7", endcapLabels);
-        writeFloatVector("/tmp/endcap-photons-weights.t7", endcapWeights);
+        writeTorchData("/tmp/endcap-photons.t7", 
+                       endcapRecHits, endcapWindowHalfWidth, endcapWindowHalfHeight,
+                       endcapLabels,
+                       endcapWeights);
     }
 
     void
