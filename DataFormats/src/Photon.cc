@@ -311,6 +311,15 @@ float const Photon::sigEOverE() const
     // Use uncertainty and error stored from reco because we want this fraction to be constant
     return ( getCorrectedEnergyError( getCandidateP4type() ) / getCorrectedEnergy( getCandidateP4type() ) );
 }
+
+float Photon::genDeltaR() const
+{
+    if (! hasMatchedGenPhoton())
+        return -1;
+        
+    return deltaR(this->p4(), matchedGenPhoton()->p4());
+}
+
 // Local Variables:
 // mode:c++
 // indent-tabs-mode:nil

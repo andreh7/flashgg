@@ -149,6 +149,9 @@ namespace flashgg {
         void setPassElectronVeto( bool val ) { passElecVeto_ = val; };
         bool passElectronVeto() const { return passElecVeto_ ; };
 
+        /** delta R to gen matched partcile or -1 if no gen match is set */
+        float genDeltaR() const;
+
         static int32_t encodeStatusFlags( bool isSaturated, bool isLeRecovered, bool isNeighRecovered, bool isGain1, bool isGain6, bool isWeired) {
             int32_t flags = 0;
             if( isSaturated ) { flags |= 0x1<<kSaturated; };
