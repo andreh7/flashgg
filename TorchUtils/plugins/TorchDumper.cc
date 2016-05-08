@@ -176,11 +176,13 @@ namespace flashgg {
         std::vector<float> barrelWeights;
         std::vector<float> barrelLabels; // 1 = prompt photon, 0 = fake or non-prompt photon
         std::vector<float> barrelMVAid; // official MVA id
+        std::vector<float> barrelGenDeltaR; // deltaR to matched gen photon
 
         std::vector<std::vector<RecHitData> > endcapRecHits;
         std::vector<float> endcapWeights;
         std::vector<float> endcapLabels; // 1 = prompt photon, 0 = fake or non-prompt photon
         std::vector<float> endcapMVAid; // official MVA id
+        std::vector<float> endcapGenDeltaR; // deltaR to matched gen photon
 
         //----------------------------------------
 
@@ -297,6 +299,8 @@ namespace flashgg {
         {
             float label = photon.genMatchType() == flashgg::Photon::kPrompt ? 1 : 0;
 
+            float genDeltaR = photon.genDeltaR();
+
             std::vector<RecHitData> rechits;
 
             const float etaMaxBarrel = 1.5;
@@ -315,6 +319,7 @@ namespace flashgg {
                 barrelWeights.push_back(weight);
                 barrelLabels.push_back(label);
                 barrelMVAid.push_back(mvaID);
+                barrelGenDeltaR.push_back(genDeltaR);
             }
             else
             {
@@ -330,6 +335,7 @@ namespace flashgg {
                 endcapWeights.push_back(weight);
                 endcapLabels.push_back(label);
                 endcapMVAid.push_back(mvaID);
+                endcapGenDeltaR.push_back(genDeltaR);
             }
         }
 
@@ -371,7 +377,8 @@ namespace flashgg {
                             unsigned windowHalfWidth, unsigned windowHalfHeight,
                             const std::vector<float> &labels,
                             const std::vector<float> &weights,
-                            const std::vector<float> &mvaids
+                            const std::vector<float> &mvaids,
+                            const std::vector<float> &genDeltaRs
                             )
         {
             // write a dict/table with 
@@ -379,7 +386,7 @@ namespace flashgg {
             //  y = labels
             //  weight = weights
             //  mvaid (for comparison)
-            const unsigned tableSize = 4;
+            const unsigned tableSize = 5;
 
             std::ofstream os(fname.c_str());
 
@@ -394,6 +401,7 @@ namespace flashgg {
             writeInt(os, MAGIC_STRING); writeString(os, "y");      writeFloatVector(os, objectIndex, labels);
             writeInt(os, MAGIC_STRING); writeString(os, "weight"); writeFloatVector(os, objectIndex, weights);
             writeInt(os, MAGIC_STRING); writeString(os, "mvaid");  writeFloatVector(os, objectIndex, mvaids);
+            writeInt(os, MAGIC_STRING); writeString(os, "genDR");  writeFloatVector(os, objectIndex, genDeltaRs);
         }
 
     };
@@ -444,14 +452,16 @@ namespace flashgg {
                        barrelRecHits, barrelWindowHalfWidth, barrelWindowHalfHeight, 
                        barrelLabels, 
                        barrelWeights,
-                       barrelMVAid);
+                       barrelMVAid,
+                       barrelGenDeltaR);
 
         // endcap
         writeTorchData("/tmp/endcap-photons.t7", 
                        endcapRecHits, endcapWindowHalfWidth, endcapWindowHalfHeight,
                        endcapLabels,
                        endcapWeights,
-                       endcapMVAid);
+                       endcapMVAid,
+                       endcapGenDeltaR);
     }
 
     void
