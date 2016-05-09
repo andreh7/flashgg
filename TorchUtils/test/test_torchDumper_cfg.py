@@ -58,7 +58,11 @@ from flashgg.MetaData.samples_utils import SamplesManager
 process.source = cms.Source ("PoolSource",
                              fileNames = cms.untracked.vstring(
         #                             "file:myMicroAODOutputFile.root"
-        "/store/user/holzner/flashgg/RunIIFall15DR76-1_3_0-25ns_ah/1_3_0/DiPhotonJets_MGG-80toInf_13TeV_amcatnloFXFX_pythia8/RunIIFall15DR76-1_3_0-25ns_ah-1_3_0-v0-RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/160502_144226/0000/myMicroAODOutputFile_10.root",
+        # "/store/user/holzner/flashgg/RunIIFall15DR76-1_3_0-25ns_ah/1_3_0/DiPhotonJets_MGG-80toInf_13TeV_amcatnloFXFX_pythia8/RunIIFall15DR76-1_3_0-25ns_ah-1_3_0-v0-RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/160502_144226/0000/myMicroAODOutputFile_10.root",
+
+        # GJet
+        '/store/user/holzner/flashgg/RunIIFall15DR76-1_3_0-25ns_ah/1_3_0/GJet_Pt-20to40_DoubleEMEnriched_MGG-80toInf_TuneCUETP8M1_13TeV_Pythia8/RunIIFall15DR76-1_3_0-25ns_ah-1_3_0-v0-RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/160502_160042/0000/myMicroAODOutputFile_100.root',
+
         # "root://eoscms.cern.ch//eos/cms//store/group/phys_higgs/cmshgg/ferriff/flashgg/RunIIFall15DR76-1_3_0-25ns_ext1/1_3_1/VBFHToGG_M-120_13TeV_powheg_pythia8/RunIIFall15DR76-1_3_0-25ns_ext1-1_3_1-v0-RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/160210_045711/0000/myMicroAODOutputFile_1.root"
 ))
 
