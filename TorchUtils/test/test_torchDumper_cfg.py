@@ -81,8 +81,9 @@ if True:
         assert customize.processId != ""
         import re
 
-        process.flashggTorchDumper.barrelOutput = cms.untracked.string(str(customize.processId) + "_" + re.sub("\.t7$","", process.flashggTorchDumper.barrelOutput.value()) + "_%d.t7" % customize.options.jobId)
-        process.flashggTorchDumper.endcapOutput = cms.untracked.string(str(customize.processId) + "_" + re.sub("\.t7$","", process.flashggTorchDumper.endcapOutput.value()) + "_%d.t7" % customize.options.jobId)
+        for subdet in [ process.flashggTorchDumper.barrel,
+                        process.flashggTorchDumper.endcap ]:
+            subdet.output = cms.untracked.string(str(customize.processId) + "_" + re.sub("\.t7$","", subdet.output.value()) + "_%d.t7" % customize.options.jobId)
     else:
         raise Exception("jobId not found")
 
