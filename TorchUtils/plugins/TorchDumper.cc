@@ -159,11 +159,11 @@ namespace flashgg {
         std::string barrelOutputFname, endcapOutputFname;
         
         /** window sizes */
-        const unsigned barrelWindowHalfWidth = 3;
-        const unsigned barrelWindowHalfHeight = 11;
+        unsigned barrelWindowHalfWidth;
+        unsigned barrelWindowHalfHeight;
 
-        const unsigned endcapWindowHalfWidth = 3;
-        const unsigned endcapWindowHalfHeight = 11;
+        unsigned endcapWindowHalfWidth;
+        unsigned endcapWindowHalfHeight;
 
         struct RecHitData
         {
@@ -412,10 +412,20 @@ namespace flashgg {
 // ******************************************************************************************
 
     TorchDumper::TorchDumper( const edm::ParameterSet &iConfig ):
-        diphotonToken_( consumes<edm::View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "diphotonsInput" ) ) ),
-        barrelOutputFname(iConfig.getUntrackedParameter<std::string>("barrelOutput")),
-        endcapOutputFname(iConfig.getUntrackedParameter<std::string>("endcapOutput"))
+        diphotonToken_( consumes<edm::View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "diphotonsInput" ) ) )
     {
+        ParameterSet barrelParams = iConfig.getUntrackedParameter<ParameterSet>( "barrel" );
+        barrelOutputFname = barrelParams.getUntrackedParameter<std::string>("output");
+
+        barrelWindowHalfWidth = barrelParams.getUntrackedParameter<unsigned>("windowHalfWidth");
+        barrelWindowHalfHeight = barrelParams.getUntrackedParameter<unsigned>("windowHalfHeight");
+
+
+        ParameterSet endcapParams = iConfig.getUntrackedParameter<ParameterSet>( "endcap" );
+        endcapOutputFname = endcapParams.getUntrackedParameter<std::string>("output");
+
+        endcapWindowHalfWidth = endcapParams.getUntrackedParameter<unsigned>("windowHalfWidth");
+        endcapWindowHalfHeight = endcapParams.getUntrackedParameter<unsigned>("windowHalfHeight");
     }
 
     TorchDumper::~TorchDumper()
