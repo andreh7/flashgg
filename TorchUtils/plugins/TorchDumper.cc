@@ -155,6 +155,8 @@ namespace flashgg {
         virtual void endJob() override;
 
         edm::EDGetTokenT<edm::View<flashgg::DiPhotonCandidate> > diphotonToken_;
+
+        std::string barrelOutputFname, endcapOutputFname;
         
         /** window sizes */
         const unsigned barrelWindowHalfWidth = 3;
@@ -410,7 +412,9 @@ namespace flashgg {
 // ******************************************************************************************
 
     TorchDumper::TorchDumper( const edm::ParameterSet &iConfig ):
-        diphotonToken_( consumes<edm::View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "diphotonsInput" ) ) )
+        diphotonToken_( consumes<edm::View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "diphotonsInput" ) ) ),
+        barrelOutputFname(iConfig.getUntrackedParameter<std::string>("barrelOutput")),
+        endcapOutputFname(iConfig.getUntrackedParameter<std::string>("endcapOutput"))
     {
     }
 
@@ -448,7 +452,7 @@ namespace flashgg {
     TorchDumper::endJob()
     {
         // barrel
-        writeTorchData("/tmp/barrel-photons.t7", 
+        writeTorchData(barrelOutputFname,
                        barrelRecHits, barrelWindowHalfWidth, barrelWindowHalfHeight, 
                        barrelLabels, 
                        barrelWeights,
@@ -456,7 +460,7 @@ namespace flashgg {
                        barrelGenDeltaR);
 
         // endcap
-        writeTorchData("/tmp/endcap-photons.t7", 
+        writeTorchData(endcapOutputFname,
                        endcapRecHits, endcapWindowHalfWidth, endcapWindowHalfHeight,
                        endcapLabels,
                        endcapWeights,
