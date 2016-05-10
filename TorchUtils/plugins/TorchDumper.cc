@@ -41,11 +41,18 @@ using namespace edm;
 
 namespace flashgg {
 
+    const unsigned MAGIC_NUMBER = 1;
     const unsigned MAGIC_STRING = 2;
-    const unsigned MAGIC_TABLE = 3;
-    const unsigned MAGIC_TORCH = 4;
+    const unsigned MAGIC_TABLE  = 3;
+    const unsigned MAGIC_TORCH  = 4;
 
     inline void writeInt(std::ostream &os, int32_t value)
+    {
+        os.write((const char*) &value, sizeof(value));
+    }
+
+    /** assumes that double is 8 bytes */
+    inline void writeDouble(std::ostream &os, double value)
     {
         os.write((const char*) &value, sizeof(value));
     }
@@ -156,8 +163,12 @@ namespace flashgg {
 
         edm::EDGetTokenT<edm::View<flashgg::DiPhotonCandidate> > diphotonToken_;
 
+        /** output file names for the Torch tensors with rechits */
         std::string barrelOutputFname, endcapOutputFname;
         
+        /** whether to write the rechits in sparse or dense format */
+        bool writeBarrelRecHitsSparse, writeEndcapRecHitsSparse;
+
         /** window sizes */
         unsigned barrelWindowHalfWidth;
         unsigned barrelWindowHalfHeight;
@@ -366,6 +377,58 @@ namespace flashgg {
             writeFloatTensor(os, objectIndex, sizes, data);
         }
 
+        /** function to write out one element of each rechit as a table of tables */
+        template<typename Func>
+        void writeRecHitsValues(std::ostream &os, unsigned &objectIndex, const std::vector<std::vector<RecHitData> > &rechits,
+                                Func&& valueFunc)
+        {
+            unsigned outerTableSize = rechits.size();
+
+            // start of outer table
+            writeInt(os, MAGIC_TABLE);
+            writeInt(os, objectIndex++);
+            writeInt(os, outerTableSize);
+
+            for (unsigned i = 0; i < outerTableSize; ++i)
+            {
+                // key
+                writeInt(os, MAGIC_NUMBER); writeDouble(os, i + 1);
+                
+                // value
+                std::vector<float> data(rechits[i].size());
+                for (unsigned j = 0; j < rechits[i].size(); ++j)
+                    data[j] = valueFunc(rechits[i][j]);
+
+                writeFloatVector(os, objectIndex, data);
+
+            } // loop over photons
+        }
+                                
+
+        /** writes the rechits as a list of list of rechits rather than a tensor which has many zeros in it.
+            Assumes that the given window already has been applied. 
+
+            writes a table with the following indices:
+              energy : table of tables of (normalized) rechit energies
+              x      : table of tables of x coordinates (written out as one based)
+              y      : table of tables of y coordinates (written out as one based)
+        */
+        void writeRecHitsSparse(std::ostream &os, unsigned &objectIndex, const std::vector<std::vector<RecHitData> > &rechits)
+        {
+            const unsigned tableSize = 3;
+
+            writeInt(os, MAGIC_TABLE);
+            writeInt(os, objectIndex++);
+            writeInt(os, tableSize);
+
+            // we add one to the x and y indices to stick to torch's one based indexing
+            // (note that in the dense writing routine this is not needed because
+            // we calculate the address directly)
+            writeInt(os, MAGIC_STRING); writeString(os, "energy");  writeRecHitsValues(os, objectIndex, rechits, [](const RecHitData &rh)  { return rh.energy; });
+            writeInt(os, MAGIC_STRING); writeString(os, "x");       writeRecHitsValues(os, objectIndex, rechits, [](const RecHitData &rh)  { return rh.dx + 1; });
+            writeInt(os, MAGIC_STRING); writeString(os, "y");       writeRecHitsValues(os, objectIndex, rechits, [](const RecHitData &rh)  { return rh.dy + 1; });
+        }
+
         /** use this e.g. for labels and weights */
         void writeFloatVector(std::ostream &os, unsigned &objectIndex, const std::vector<float> &data)
         {
@@ -376,6 +439,7 @@ namespace flashgg {
         }
 
         void writeTorchData(const std::string &fname, const std::vector<std::vector<RecHitData> > &rechits,
+                            bool sparseRecHits,
                             unsigned windowHalfWidth, unsigned windowHalfHeight,
                             const std::vector<float> &labels,
                             const std::vector<float> &weights,
@@ -399,7 +463,12 @@ namespace flashgg {
             
             writeInt(os, tableSize);
 
-            writeInt(os, MAGIC_STRING); writeString(os, "X");      writeRecHits(os, objectIndex, rechits, windowHalfWidth, windowHalfHeight);
+            writeInt(os, MAGIC_STRING); writeString(os, "X");      
+            if (sparseRecHits)
+                writeRecHitsSparse(os, objectIndex, rechits);
+            else
+                writeRecHits(os, objectIndex, rechits, windowHalfWidth, windowHalfHeight);
+
             writeInt(os, MAGIC_STRING); writeString(os, "y");      writeFloatVector(os, objectIndex, labels);
             writeInt(os, MAGIC_STRING); writeString(os, "weight"); writeFloatVector(os, objectIndex, weights);
             writeInt(os, MAGIC_STRING); writeString(os, "mvaid");  writeFloatVector(os, objectIndex, mvaids);
@@ -416,6 +485,7 @@ namespace flashgg {
     {
         ParameterSet barrelParams = iConfig.getUntrackedParameter<ParameterSet>( "barrel" );
         barrelOutputFname = barrelParams.getUntrackedParameter<std::string>("output");
+        writeBarrelRecHitsSparse = barrelParams.getUntrackedParameter<bool>("writeSparse");
 
         barrelWindowHalfWidth = barrelParams.getUntrackedParameter<unsigned>("windowHalfWidth");
         barrelWindowHalfHeight = barrelParams.getUntrackedParameter<unsigned>("windowHalfHeight");
@@ -423,6 +493,7 @@ namespace flashgg {
 
         ParameterSet endcapParams = iConfig.getUntrackedParameter<ParameterSet>( "endcap" );
         endcapOutputFname = endcapParams.getUntrackedParameter<std::string>("output");
+        writeEndcapRecHitsSparse = endcapParams.getUntrackedParameter<bool>("writeSparse");
 
         endcapWindowHalfWidth = endcapParams.getUntrackedParameter<unsigned>("windowHalfWidth");
         endcapWindowHalfHeight = endcapParams.getUntrackedParameter<unsigned>("windowHalfHeight");
@@ -463,7 +534,7 @@ namespace flashgg {
     {
         // barrel
         writeTorchData(barrelOutputFname,
-                       barrelRecHits, barrelWindowHalfWidth, barrelWindowHalfHeight, 
+                       barrelRecHits, writeBarrelRecHitsSparse, barrelWindowHalfWidth, barrelWindowHalfHeight, 
                        barrelLabels, 
                        barrelWeights,
                        barrelMVAid,
@@ -471,7 +542,7 @@ namespace flashgg {
 
         // endcap
         writeTorchData(endcapOutputFname,
-                       endcapRecHits, endcapWindowHalfWidth, endcapWindowHalfHeight,
+                       endcapRecHits, writeEndcapRecHitsSparse, endcapWindowHalfWidth, endcapWindowHalfHeight,
                        endcapLabels,
                        endcapWeights,
                        endcapMVAid,
