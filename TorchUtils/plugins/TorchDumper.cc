@@ -352,7 +352,8 @@ namespace flashgg {
             }
         }
 
-        void writeRecHits(std::ostream &os, unsigned &objectIndex, const std::vector<std::vector<RecHitData> > &rechits, int windowHalfWidth, int windowHalfHeight)
+        void writeRecHits(std::ostream &os, unsigned &objectIndex, const std::vector<std::vector<RecHitData> > &rechits, 
+                          int windowHalfWidth, int windowHalfHeight)
         {
             std::vector<unsigned> sizes;
             sizes.push_back(rechits.size());
@@ -379,29 +380,25 @@ namespace flashgg {
 
         /** function to write out one element of each rechit as a table of tables */
         template<typename Func>
-        void writeRecHitsValues(std::ostream &os, unsigned &objectIndex, const std::vector<std::vector<RecHitData> > &rechits,
+        void writeRecHitsValues(std::ostream &os, unsigned &objectIndex, 
+                                const std::vector<std::vector<RecHitData> > &rechits,
+                                unsigned totNumRecHits, 
                                 Func&& valueFunc)
         {
-            unsigned outerTableSize = rechits.size();
+            std::vector<float> values(totNumRecHits);
 
-            // start of outer table
-            writeInt(os, MAGIC_TABLE);
-            writeInt(os, objectIndex++);
-            writeInt(os, outerTableSize);
+            unsigned nextPos = 0;
 
-            for (unsigned i = 0; i < outerTableSize; ++i)
+            for (unsigned i = 0; i < rechits.size(); ++i)
             {
-                // key
-                writeInt(os, MAGIC_NUMBER); writeDouble(os, i + 1);
-                
-                // value
-                std::vector<float> data(rechits[i].size());
                 for (unsigned j = 0; j < rechits[i].size(); ++j)
-                    data[j] = valueFunc(rechits[i][j]);
-
-                writeFloatVector(os, objectIndex, data);
-
+                    values[nextPos++] = valueFunc(rechits[i][j]);
             } // loop over photons
+
+            cout << "nextPos=" << nextPos << " totNumRecHits=" << totNumRecHits << endl;
+            assert(nextPos == totNumRecHits);
+
+            writeFloatVector(os, objectIndex, values);
         }
                                 
 
@@ -409,24 +406,44 @@ namespace flashgg {
             Assumes that the given window already has been applied. 
 
             writes a table with the following indices:
-              energy : table of tables of (normalized) rechit energies
-              x      : table of tables of x coordinates (written out as one based)
-              y      : table of tables of y coordinates (written out as one based)
+              energy     : 1d tensor of (normalized) rechit energies
+              x          : 1d tensor of x coordinates (written out as one based)
+              y          : 1d tensor of y coordinates (written out as one based)
+              firstIndex : 1d tensor of first indices in the energy, x and y tensors (index of this
+                           tensor the index of the photon)
+              numRecHits : number of rechits for the given photon
         */
         void writeRecHitsSparse(std::ostream &os, unsigned &objectIndex, const std::vector<std::vector<RecHitData> > &rechits)
         {
-            const unsigned tableSize = 3;
+            const unsigned tableSize = 5;
 
             writeInt(os, MAGIC_TABLE);
             writeInt(os, objectIndex++);
             writeInt(os, tableSize);
 
+            std::vector<float> firstIndex(rechits.size()), numRecHits(rechits.size());
+            unsigned nextStartIndex = 1;
+
+            for (unsigned i = 0; i < rechits.size(); ++i)
+            {
+                firstIndex[i] = nextStartIndex;
+                numRecHits[i] = rechits[i].size();
+                
+                nextStartIndex += rechits[i].size();
+
+            } // loop over photons
+            
+            unsigned totNumRecHits = nextStartIndex - 1;
+            
+            writeInt(os, MAGIC_STRING); writeString(os, "firstIndex");  writeFloatVector(os, objectIndex, firstIndex);
+            writeInt(os, MAGIC_STRING); writeString(os, "numRecHits");  writeFloatVector(os, objectIndex, numRecHits);
+
             // we add one to the x and y indices to stick to torch's one based indexing
             // (note that in the dense writing routine this is not needed because
             // we calculate the address directly)
-            writeInt(os, MAGIC_STRING); writeString(os, "energy");  writeRecHitsValues(os, objectIndex, rechits, [](const RecHitData &rh)  { return rh.energy; });
-            writeInt(os, MAGIC_STRING); writeString(os, "x");       writeRecHitsValues(os, objectIndex, rechits, [](const RecHitData &rh)  { return rh.dx + 1; });
-            writeInt(os, MAGIC_STRING); writeString(os, "y");       writeRecHitsValues(os, objectIndex, rechits, [](const RecHitData &rh)  { return rh.dy + 1; });
+            writeInt(os, MAGIC_STRING); writeString(os, "energy");  writeRecHitsValues(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.energy; });
+            writeInt(os, MAGIC_STRING); writeString(os, "x");       writeRecHitsValues(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dx + 1; });
+            writeInt(os, MAGIC_STRING); writeString(os, "y");       writeRecHitsValues(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dy + 1; });
         }
 
         /** use this e.g. for labels and weights */
