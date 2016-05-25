@@ -46,6 +46,12 @@ namespace flashgg {
     const unsigned MAGIC_TABLE  = 3;
     const unsigned MAGIC_TORCH  = 4;
 
+    template<typename DataType>
+    inline void writeType(std::ostream &os, const DataType &value)
+    {
+        os.write((const char*) &value, sizeof(value));
+    }
+
     inline void writeInt(std::ostream &os, int32_t value)
     {
         os.write((const char*) &value, sizeof(value));
@@ -76,7 +82,9 @@ namespace flashgg {
         os.write((const char*) &str[0], len);
     }
 
-    void writeFloatTensor(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<float> &data)
+    template<typename DataType>
+    void writeTypeTensorHelper(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<DataType> &data, const std::string &tensorTypeName,
+                         const std::string &storageTypeName)
     {
         // data must be stored in the order such the an increase of the index in the last dimension
         // by one corresponds to an indcreas of the index into data by one etc.
@@ -91,7 +99,7 @@ namespace flashgg {
         writeString(os, "V 1");
 
         // class name
-        writeString(os, "torch.FloatTensor");
+        writeString(os, tensorTypeName);
 
         //----------
 
@@ -133,15 +141,31 @@ namespace flashgg {
         writeString(os, "V 1");
 
         // class name
-        writeString(os, "torch.FloatStorage");
+        writeString(os, storageTypeName);
 
         // size
         writeLong(os, data.size());
 
         // the actual content
         for (unsigned i = 0 ; i < data.size(); ++i)
-            writeFloat(os, data[i]);
+            writeType<DataType>(os, data[i]);
 
+    }
+
+    template<typename DataType>
+    void writeTypeTensor(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<DataType> &data);
+
+    // template specializations
+    template<>
+    inline void writeTypeTensor<float>(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<float> &data) 
+    {
+        writeTypeTensorHelper<float>(os, objectIndex, sizes, data, "torch.FloatTensor", "torch.FloatStorage");
+    }
+
+    template<>
+    inline void writeTypeTensor<int32_t>(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<int32_t> &data) 
+    {
+        writeTypeTensorHelper<int32_t>(os, objectIndex, sizes, data, "torch.IntTensor", "torch.IntStorage");
     }
 
     //----------------------------------------------------------------------
@@ -375,17 +399,17 @@ namespace flashgg {
 
             } // loop over events
 
-            writeFloatTensor(os, objectIndex, sizes, data);
+            writeTypeTensor(os, objectIndex, sizes, data);
         }
 
         /** function to write out one element of each rechit as a table of tables */
-        template<typename Func>
+        template<typename DataType, typename Func>
         void writeRecHitsValues(std::ostream &os, unsigned &objectIndex, 
                                 const std::vector<std::vector<RecHitData> > &rechits,
                                 unsigned totNumRecHits, 
                                 Func&& valueFunc)
         {
-            std::vector<float> values(totNumRecHits);
+            std::vector<DataType> values(totNumRecHits);
 
             unsigned nextPos = 0;
 
@@ -398,7 +422,7 @@ namespace flashgg {
             cout << "nextPos=" << nextPos << " totNumRecHits=" << totNumRecHits << endl;
             assert(nextPos == totNumRecHits);
 
-            writeFloatVector(os, objectIndex, values);
+            writeTypeVector<DataType>(os, objectIndex, values);
         }
                                 
 
@@ -435,24 +459,25 @@ namespace flashgg {
             
             unsigned totNumRecHits = nextStartIndex - 1;
             
-            writeInt(os, MAGIC_STRING); writeString(os, "firstIndex");  writeFloatVector(os, objectIndex, firstIndex);
-            writeInt(os, MAGIC_STRING); writeString(os, "numRecHits");  writeFloatVector(os, objectIndex, numRecHits);
+            writeInt(os, MAGIC_STRING); writeString(os, "firstIndex");  writeTypeVector(os, objectIndex, firstIndex);
+            writeInt(os, MAGIC_STRING); writeString(os, "numRecHits");  writeTypeVector(os, objectIndex, numRecHits);
 
             // we add one to the x and y indices to stick to torch's one based indexing
             // (note that in the dense writing routine this is not needed because
             // we calculate the address directly)
-            writeInt(os, MAGIC_STRING); writeString(os, "energy");  writeRecHitsValues(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.energy; });
-            writeInt(os, MAGIC_STRING); writeString(os, "x");       writeRecHitsValues(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dx + 1; });
-            writeInt(os, MAGIC_STRING); writeString(os, "y");       writeRecHitsValues(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dy + 1; });
+            writeInt(os, MAGIC_STRING); writeString(os, "energy");  writeRecHitsValues<float>(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.energy; });
+            writeInt(os, MAGIC_STRING); writeString(os, "x");       writeRecHitsValues<int32_t>(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dx + 1; });
+            writeInt(os, MAGIC_STRING); writeString(os, "y");       writeRecHitsValues<int32_t>(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dy + 1; });
         }
 
-        /** use this e.g. for labels and weights */
-        void writeFloatVector(std::ostream &os, unsigned &objectIndex, const std::vector<float> &data)
+
+        template<typename DataType>
+        void writeTypeVector(std::ostream &os, unsigned &objectIndex, const std::vector<DataType> &data)
         {
             std::vector<unsigned> sizes;
             sizes.push_back(data.size());
 
-            writeFloatTensor(os, objectIndex, sizes, data);
+            writeTypeTensor<DataType>(os, objectIndex, sizes, data);
         }
 
         void writeTorchData(const std::string &fname, const std::vector<std::vector<RecHitData> > &rechits,
@@ -486,10 +511,10 @@ namespace flashgg {
             else
                 writeRecHits(os, objectIndex, rechits, windowHalfWidth, windowHalfHeight);
 
-            writeInt(os, MAGIC_STRING); writeString(os, "y");      writeFloatVector(os, objectIndex, labels);
-            writeInt(os, MAGIC_STRING); writeString(os, "weight"); writeFloatVector(os, objectIndex, weights);
-            writeInt(os, MAGIC_STRING); writeString(os, "mvaid");  writeFloatVector(os, objectIndex, mvaids);
-            writeInt(os, MAGIC_STRING); writeString(os, "genDR");  writeFloatVector(os, objectIndex, genDeltaRs);
+            writeInt(os, MAGIC_STRING); writeString(os, "y");      writeTypeVector(os, objectIndex, labels);
+            writeInt(os, MAGIC_STRING); writeString(os, "weight"); writeTypeVector(os, objectIndex, weights);
+            writeInt(os, MAGIC_STRING); writeString(os, "mvaid");  writeTypeVector(os, objectIndex, mvaids);
+            writeInt(os, MAGIC_STRING); writeString(os, "genDR");  writeTypeVector(os, objectIndex, genDeltaRs);
         }
 
     };
