@@ -215,11 +215,19 @@ namespace flashgg {
         std::vector<float> barrelMVAid; // official MVA id
         std::vector<float> barrelGenDeltaR; // deltaR to matched gen photon
 
+        std::vector<float> barrelChgIsoWrtChosenVtx;
+        std::vector<float> barrelChgIsoWrtWorstVtx;
+
+
         std::vector<std::vector<RecHitData> > endcapRecHits;
         std::vector<float> endcapWeights;
         std::vector<float> endcapLabels; // 1 = prompt photon, 0 = fake or non-prompt photon
         std::vector<float> endcapMVAid; // official MVA id
         std::vector<float> endcapGenDeltaR; // deltaR to matched gen photon
+
+        std::vector<float> endcapChgIsoWrtChosenVtx;
+        std::vector<float> endcapChgIsoWrtWorstVtx;
+
 
         //----------------------------------------
 
@@ -332,7 +340,10 @@ namespace flashgg {
         }
 
 
-        void addPhoton(const flashgg::Photon &photon, float weight, float mvaID)
+        void addPhoton(const flashgg::Photon &photon, float weight, float mvaID,
+                       float chosenVertexChargedIso,
+                       float worstVertexChargedIso
+                       )
         {
             float label = photon.genMatchType() == flashgg::Photon::kPrompt ? 1 : 0;
 
@@ -357,6 +368,10 @@ namespace flashgg {
                 barrelLabels.push_back(label);
                 barrelMVAid.push_back(mvaID);
                 barrelGenDeltaR.push_back(genDeltaR);
+
+                // track isolation variables
+                barrelChgIsoWrtChosenVtx.push_back(chosenVertexChargedIso);
+                barrelChgIsoWrtWorstVtx.push_back(worstVertexChargedIso);
             }
             else
             {
@@ -373,6 +388,11 @@ namespace flashgg {
                 endcapLabels.push_back(label);
                 endcapMVAid.push_back(mvaID);
                 endcapGenDeltaR.push_back(genDeltaR);
+
+                // track isolation variables
+                endcapChgIsoWrtChosenVtx.push_back(chosenVertexChargedIso);
+                endcapChgIsoWrtWorstVtx.push_back(worstVertexChargedIso);
+
             }
         }
 
@@ -486,7 +506,9 @@ namespace flashgg {
                             const std::vector<float> &labels,
                             const std::vector<float> &weights,
                             const std::vector<float> &mvaids,
-                            const std::vector<float> &genDeltaRs
+                            const std::vector<float> &genDeltaRs,
+                            const std::vector<float> &chgIsoWrtChosenVtx,
+                            const std::vector<float> &chgIsoWrtWorstVtx
                             )
         {
             // write a dict/table with 
@@ -494,7 +516,9 @@ namespace flashgg {
             //  y = labels
             //  weight = weights
             //  mvaid (for comparison)
-            const unsigned tableSize = 5;
+            //  charged isolation w.r.t. chosen vertex
+            //  charged isolation w.r.t. worst vertex
+            const unsigned tableSize = 7;
 
             std::ofstream os(fname.c_str());
 
@@ -515,6 +539,9 @@ namespace flashgg {
             writeInt(os, MAGIC_STRING); writeString(os, "weight"); writeTypeVector(os, objectIndex, weights);
             writeInt(os, MAGIC_STRING); writeString(os, "mvaid");  writeTypeVector(os, objectIndex, mvaids);
             writeInt(os, MAGIC_STRING); writeString(os, "genDR");  writeTypeVector(os, objectIndex, genDeltaRs);
+
+            writeInt(os, MAGIC_STRING); writeString(os, "chgIsoWrtChosenVtx");  writeTypeVector(os, objectIndex, chgIsoWrtChosenVtx);
+            writeInt(os, MAGIC_STRING); writeString(os, "chgIsoWrtWorstVtx");   writeTypeVector(os, objectIndex, chgIsoWrtWorstVtx);
         }
 
     };
@@ -558,8 +585,17 @@ namespace flashgg {
             // TODO: check if this corresponds to the final event weight ?!
             float weight = diphoton.centralWeight();
 
-            addPhoton(*diphoton.leadingPhoton(), weight, diphoton.leadingView()->phoIdMvaWrtChosenVtx());
-            addPhoton(*diphoton.subLeadingPhoton(), weight, diphoton.subLeadingView()->phoIdMvaWrtChosenVtx());
+            addPhoton(*diphoton.leadingPhoton(), weight, 
+                      diphoton.leadingView()->phoIdMvaWrtChosenVtx(),
+                      diphoton.leadingView()->pfChIso03WrtChosenVtx(),
+                      diphoton.leadingPhoton()->pfChgIsoWrtWorstVtx04()
+                      );
+            addPhoton(*diphoton.subLeadingPhoton(), weight, 
+                      diphoton.subLeadingView()->phoIdMvaWrtChosenVtx(),
+                      diphoton.subLeadingView()->pfChIso03WrtChosenVtx(),
+                      diphoton.subLeadingPhoton()->pfChgIsoWrtWorstVtx04()
+
+                      );
 
             // only consider the first pair (how are they sorted ?)
             break;
@@ -580,7 +616,10 @@ namespace flashgg {
                        barrelLabels, 
                        barrelWeights,
                        barrelMVAid,
-                       barrelGenDeltaR);
+                       barrelGenDeltaR,
+                       barrelChgIsoWrtChosenVtx,
+                       barrelChgIsoWrtWorstVtx
+                       );
 
         // endcap
         writeTorchData(endcapOutputFname,
@@ -588,7 +627,10 @@ namespace flashgg {
                        endcapLabels,
                        endcapWeights,
                        endcapMVAid,
-                       endcapGenDeltaR);
+                       endcapGenDeltaR,
+                       endcapChgIsoWrtChosenVtx,
+                       endcapChgIsoWrtWorstVtx
+                       );
     }
 
     void
