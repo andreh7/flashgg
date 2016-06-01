@@ -88,9 +88,10 @@ Deriving Shower Shape Corrections
 =================================
 In order to derive shower shape transformation you can use makeTransformation.py script in https://github.com/matteosan1/plotZeeValidation.
 Once the Zee validation ntuples have been produced you can run the script three times with different parameters to: 
-1) produce the .root file with the necessary plots (python makeTransformation.py -p mc_ntuple_name.root target_ntuple_name.root)
-2) derive the transformations (python makeTransformation.py -c)
-3) test the transformations on the original ntuples (python makeTransformation.py -t mc_ntuple_name.root target_ntuple_name.root)
+
+1. produce the `.root` file with the necessary plots (`python makeTransformation.py -p mc_ntuple_name.root target_ntuple_name.root`)
+2. derive the transformations (`python makeTransformation.py -c`)
+3. test the transformations on the original ntuples (`python makeTransformation.py -t mc_ntuple_name.root target_ntuple_name.root`)
 
 IDMVA with systematic plot
 ==========================
