@@ -66,7 +66,7 @@ pileupCalc.py lumi -i /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collis
 
 ZeeValidation
 =============
-The first step is like the previous one, just replace the json with the proper one (e.g. zee_single.json) and the configuration to be run to zeeValidationDumper.py.
+The first step is like the previous one, just replace the json with the proper one (e.g. `zee_single.json`) and the configuration to be run to `zeeValidationDumper.py`.
 Once you have the corresponding data and MC trees you can produce plots following the instructions below (no CMSSW is needed here).
 ```
 git clone https://github.com/matteosan1/plotZeeValidation
@@ -76,11 +76,11 @@ root -l
 plotter(data_file_name, mc_file_name)
 python combinePlots.py output_file_of_previous_step
 ```
-This should create a .root file with all the plots.
+This should create a `.root` file with all the plots.
 The plots (and the event categorization) are defined in the following files:
-- plotvariables.dat (histogram definition)
-- categories.dat (category definition)
-- selection.dat (event selection definition as a ROOT TCut string)
+- `plotvariables.dat` (histogram definition)
+- `categories.dat` (category definition)
+- `selection.dat` (event selection definition as a ROOT TCut string)
 
 The final python script combines data and MC histos and put them together with the appropriate style.
 
