@@ -6,15 +6,15 @@ flashggTorchDumper = cms.EDAnalyzer('FlashggTorchDumper',
 
                                     barrel = cms.untracked.PSet(
                                         output = cms.untracked.string("rechits-barrel.t7"),
-                                        windowHalfWidth = cms.untracked.uint32(3),
-                                        windowHalfHeight = cms.untracked.uint32(11),
+                                        windowHalfWidth = cms.untracked.uint32(17),
+                                        windowHalfHeight = cms.untracked.uint32(17),
                                         writeSparse = cms.untracked.bool(True),
                                         ),
 
                                     endcap = cms.untracked.PSet(
                                         output = cms.untracked.string("rechits-endcap.t7"),
-                                        windowHalfWidth = cms.untracked.uint32(3),
-                                        windowHalfHeight = cms.untracked.uint32(11),
+                                        windowHalfWidth = cms.untracked.uint32(17),
+                                        windowHalfHeight = cms.untracked.uint32(17),
                                         writeSparse = cms.untracked.bool(True),
                                         ),
                                    )
