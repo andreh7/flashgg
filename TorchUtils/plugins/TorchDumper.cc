@@ -465,7 +465,7 @@ namespace flashgg {
             writeInt(os, objectIndex++);
             writeInt(os, tableSize);
 
-            std::vector<float> firstIndex(rechits.size()), numRecHits(rechits.size());
+            std::vector<int32_t> firstIndex(rechits.size()), numRecHits(rechits.size());
             unsigned nextStartIndex = 1;
 
             for (unsigned i = 0; i < rechits.size(); ++i)
