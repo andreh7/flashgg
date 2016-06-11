@@ -136,6 +136,12 @@ class LsfJob(object):
     #----------------------------------------
     def run(self,script):
         
+        # add a one second pause between jobs to make sure
+        # not to push LSF too much, we've seen stack traces
+        # from the bsub command itself (!) otherwise...
+        import time
+        time.sleep(1)
+
         bsubCmdParts = [ "bsub",
                          "-q " + self.lsfQueue,
                          ]
