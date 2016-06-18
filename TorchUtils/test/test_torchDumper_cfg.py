@@ -81,8 +81,8 @@ if True:
         assert customize.processId != ""
         import re
 
-        for subdet in [ process.flashggTorchDumper.barrel,
-                        process.flashggTorchDumper.endcap ]:
+        for subdet in [ process.flashggTorchDumperBarrel,
+                        process.flashggTorchDumperEndcap ]:
             subdet.output = cms.untracked.string(str(customize.processId) + "_" + re.sub("\.t7$","", subdet.output.value()) + "_%d.t7" % customize.options.jobId)
     else:
         raise Exception("jobId not found")
@@ -138,7 +138,8 @@ process.p = cms.Path(process.dataRequirements*
                      (process.flashggTagSequence*process.systematicsTagSequences)*
                      process.flashggSystTagMerger*
                      process.finalFilter *
-                     process.flashggTorchDumper
+                     process.flashggTorchDumperBarrel * 
+                     process.flashggTorchDumperEndcap
                      )
 
 print "--- Dumping modules that take diphotons as input: ---"
