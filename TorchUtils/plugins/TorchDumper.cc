@@ -416,16 +416,7 @@ namespace flashgg {
             writeTypeTensor<DataType>(os, objectIndex, sizes, data);
         }
 
-        void writeTorchData(const std::string &fname, const std::vector<std::vector<RecHitData> > &rechits,
-                            bool sparseRecHits,
-                            unsigned windowHalfWidth, unsigned windowHalfHeight,
-                            const std::vector<float> &labels,
-                            const std::vector<float> &weights,
-                            const std::vector<float> &mvaids,
-                            const std::vector<float> &genDeltaRs,
-                            const std::vector<float> &chgIsoWrtChosenVtx,
-                            const std::vector<float> &chgIsoWrtWorstVtx
-                            )
+        void writeTorchData()
         {
             // write a dict/table with 
             //  X = rechits
@@ -436,7 +427,7 @@ namespace flashgg {
             //  charged isolation w.r.t. worst vertex
             const unsigned tableSize = 7;
 
-            std::ofstream os(fname.c_str());
+            std::ofstream os(outputFname.c_str());
 
             writeInt(os, MAGIC_TABLE);
 
@@ -446,15 +437,15 @@ namespace flashgg {
             writeInt(os, tableSize);
 
             writeInt(os, MAGIC_STRING); writeString(os, "X");      
-            if (sparseRecHits)
-                writeRecHitsSparse(os, objectIndex, rechits);
+            if (writeRecHitsSparseFlag)
+                writeRecHitsSparse(os, objectIndex, recHits);
             else
-                writeRecHits(os, objectIndex, rechits, windowHalfWidth, windowHalfHeight);
+                writeRecHits(os, objectIndex, recHits, windowHalfWidth, windowHalfHeight);
 
             writeInt(os, MAGIC_STRING); writeString(os, "y");      writeTypeVector(os, objectIndex, labels);
             writeInt(os, MAGIC_STRING); writeString(os, "weight"); writeTypeVector(os, objectIndex, weights);
-            writeInt(os, MAGIC_STRING); writeString(os, "mvaid");  writeTypeVector(os, objectIndex, mvaids);
-            writeInt(os, MAGIC_STRING); writeString(os, "genDR");  writeTypeVector(os, objectIndex, genDeltaRs);
+            writeInt(os, MAGIC_STRING); writeString(os, "mvaid");  writeTypeVector(os, objectIndex, mvaID);
+            writeInt(os, MAGIC_STRING); writeString(os, "genDR");  writeTypeVector(os, objectIndex, genDeltaR);
 
             writeInt(os, MAGIC_STRING); writeString(os, "chgIsoWrtChosenVtx");  writeTypeVector(os, objectIndex, chgIsoWrtChosenVtx);
             writeInt(os, MAGIC_STRING); writeString(os, "chgIsoWrtWorstVtx");   writeTypeVector(os, objectIndex, chgIsoWrtWorstVtx);
@@ -517,15 +508,7 @@ namespace flashgg {
     void
     TorchDumper::endJob()
     {
-        writeTorchData(outputFname,
-                       recHits, writeRecHitsSparseFlag, windowHalfWidth, windowHalfHeight, 
-                       labels, 
-                       weights,
-                       mvaID,
-                       genDeltaR,
-                       chgIsoWrtChosenVtx,
-                       chgIsoWrtWorstVtx
-                       );
+        writeTorchData();
     }
 
     void
