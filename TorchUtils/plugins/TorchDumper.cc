@@ -174,12 +174,12 @@ namespace flashgg {
     {
     public:
         explicit TorchDumper( const edm::ParameterSet & );
-        ~TorchDumper();
+        virtual ~TorchDumper();
 
         static void fillDescriptions( edm::ConfigurationDescriptions &descriptions );
 
 
-    private:
+    protected:
 
         virtual void beginJob() override;
         virtual void analyze( const edm::Event &, const edm::EventSetup & ) override;
@@ -188,17 +188,14 @@ namespace flashgg {
         edm::EDGetTokenT<edm::View<flashgg::DiPhotonCandidate> > diphotonToken_;
 
         /** output file names for the Torch tensors with rechits */
-        std::string barrelOutputFname, endcapOutputFname;
+        const std::string outputFname;
         
         /** whether to write the rechits in sparse or dense format */
-        bool writeBarrelRecHitsSparse, writeEndcapRecHitsSparse;
+        const bool writeRecHitsSparseFlag;
 
         /** window sizes */
-        unsigned barrelWindowHalfWidth;
-        unsigned barrelWindowHalfHeight;
-
-        unsigned endcapWindowHalfWidth;
-        unsigned endcapWindowHalfHeight;
+        const unsigned windowHalfWidth;
+        const unsigned windowHalfHeight;
 
         struct RecHitData
         {
@@ -209,31 +206,25 @@ namespace flashgg {
 
 
         /** rechit information to be written out at the end */
-        std::vector<std::vector<RecHitData> > barrelRecHits;
-        std::vector<float> barrelWeights;
-        std::vector<float> barrelLabels; // 1 = prompt photon, 0 = fake or non-prompt photon
-        std::vector<float> barrelMVAid; // official MVA id
-        std::vector<float> barrelGenDeltaR; // deltaR to matched gen photon
+        std::vector<std::vector<RecHitData> > recHits;
+        std::vector<float> weights;
+        std::vector<float> labels; // 1 = prompt photon, 0 = fake or non-prompt photon
+        std::vector<float> mvaID; // official MVA id
+        std::vector<float> genDeltaR; // deltaR to matched gen photon
 
-        std::vector<float> barrelChgIsoWrtChosenVtx;
-        std::vector<float> barrelChgIsoWrtWorstVtx;
+        std::vector<float> chgIsoWrtChosenVtx;
+        std::vector<float> chgIsoWrtWorstVtx;
 
-
-        std::vector<std::vector<RecHitData> > endcapRecHits;
-        std::vector<float> endcapWeights;
-        std::vector<float> endcapLabels; // 1 = prompt photon, 0 = fake or non-prompt photon
-        std::vector<float> endcapMVAid; // official MVA id
-        std::vector<float> endcapGenDeltaR; // deltaR to matched gen photon
-
-        std::vector<float> endcapChgIsoWrtChosenVtx;
-        std::vector<float> endcapChgIsoWrtWorstVtx;
-
+        /** boundary between barrel and endcap */
+        const float etaMaxBarrel = 1.5;
 
         //----------------------------------------
 
+        virtual void wrapCoordinates(RecHitData &rechit) = 0;
+
         /** finds the crystal with the maximum energy, normalizes to that and applies the given window around
             the maximum */
-        void applyWindowAndNormalizeEnergy(std::vector<RecHitData> &rechits, int windowHalfWidth, int windowHalfHeight, bool isBarrel)
+        void applyWindowAndNormalizeEnergy(std::vector<RecHitData> &rechits, int windowHalfWidth, int windowHalfHeight)
         {
             if (rechits.size() < 1)
                 return;
@@ -265,14 +256,7 @@ namespace flashgg {
                 rechits[i].dy -= ymax; rechits[i].dy += centerY;
 
                 // wrap around in phi for the barrel
-                if (isBarrel)
-                {
-                    while (rechits[i].dx < 0)
-                        rechits[i].dx += 360;
-
-                    while (rechits[i].dx >= 360)
-                        rechits[i].dx -= 360;
-                }
+                wrapCoordinates(rechits[i]);
 
                 // apply window 
                 if (rechits[i].dx < 0 || rechits[i].dx >= 2 * windowHalfWidth + 1 || 
@@ -287,58 +271,11 @@ namespace flashgg {
 
         //----------------------------------------
 
-        void fillBarrelRecHits(const flashgg::Photon &photon, std::vector<RecHitData> &rechits)
-        {
-            for (auto rechit : *photon.recHits())
-            {
-                if (rechit.detid().det() != DetId::Ecal)
-                    continue;
+        /** subdet specific: extract rechit coordinates */
+        virtual void fillRecHits(const flashgg::Photon &photon, std::vector<RecHitData> &rechits) = 0;
 
-                if (rechit.detid().subdetId() != EcalBarrel)
-                    continue;
-
-                EBDetId dt = EBDetId(rechit.detid());
-
-                RecHitData data;
-                data.energy = rechit.energy();
-                data.dx = dt.ieta();
-                data.dy = dt.iphi();
-
-                // eta goes from -85 to -1 then jumps to +1 to +85
-                // (i.e. there is no zero..)
-                if (data.dx < 0)
-                    data.dx += 1;
-
-                // iphi goes from 1 to 360, move it to 0.. 359
-                data.dy -= 1;
-                
-                rechits.push_back(data);
-
-            } // loop over rechits
-        }
-
-        void fillEndcapRecHits(const flashgg::Photon &photon, std::vector<RecHitData> &rechits)
-        {
-            for (auto rechit : *photon.recHits())
-            {
-                if (rechit.detid().det() != DetId::Ecal)
-                    continue;
-
-                if (rechit.detid().subdetId() != EcalEndcap)
-                    continue;
-
-                EEDetId dt = EEDetId(rechit.detid());
-
-                RecHitData data;
-                data.energy = rechit.energy();
-                data.dx = dt.ix();
-                data.dy = dt.iy();
-
-                rechits.push_back(data);
-
-            } // loop over rechits
-        }
-
+        /** called to check if a photon is in barrel/endcap */
+        virtual bool isPhotonInSubdet(const flashgg::Photon &photon) = 0;
 
         void addPhoton(const flashgg::Photon &photon, float weight, float mvaID,
                        float chosenVertexChargedIso,
@@ -351,48 +288,27 @@ namespace flashgg {
 
             std::vector<RecHitData> rechits;
 
-            const float etaMaxBarrel = 1.5;
-
-            if (fabs(photon.eta()) < etaMaxBarrel)
+            if (isPhotonInSubdet(photon))
             {
-                // barrel
-                fillBarrelRecHits(photon, rechits);
-                applyWindowAndNormalizeEnergy(rechits, barrelWindowHalfWidth, barrelWindowHalfHeight, true);
+                // photon is in the detector region (barrel/endcap) this instance works with
+                // TODO: do we need to check this ? We already check in the following function
+                //       for each rechit
+                fillRecHits(photon, rechits);
+                applyWindowAndNormalizeEnergy(rechits, windowHalfWidth, windowHalfHeight);
 
                 // ignore 'empty' photons for the moment
                 if (rechits.size() < 1)
                     return;
 
-                barrelRecHits.push_back(rechits);
-                barrelWeights.push_back(weight);
-                barrelLabels.push_back(label);
-                barrelMVAid.push_back(mvaID);
-                barrelGenDeltaR.push_back(genDeltaR);
+                this->recHits.push_back(rechits);
+                this->weights.push_back(weight);
+                this->labels.push_back(label);
+                this->mvaID.push_back(mvaID);
+                this->genDeltaR.push_back(genDeltaR);
 
                 // track isolation variables
-                barrelChgIsoWrtChosenVtx.push_back(chosenVertexChargedIso);
-                barrelChgIsoWrtWorstVtx.push_back(worstVertexChargedIso);
-            }
-            else
-            {
-                // endcap
-                fillEndcapRecHits(photon, rechits);
-                applyWindowAndNormalizeEnergy(rechits, endcapWindowHalfWidth, endcapWindowHalfHeight, false);
-
-                // ignore 'empty' photons for the moment
-                if (rechits.size() < 1)
-                    return;
-
-                endcapRecHits.push_back(rechits);
-                endcapWeights.push_back(weight);
-                endcapLabels.push_back(label);
-                endcapMVAid.push_back(mvaID);
-                endcapGenDeltaR.push_back(genDeltaR);
-
-                // track isolation variables
-                endcapChgIsoWrtChosenVtx.push_back(chosenVertexChargedIso);
-                endcapChgIsoWrtWorstVtx.push_back(worstVertexChargedIso);
-
+                this->chgIsoWrtChosenVtx.push_back(chosenVertexChargedIso);
+                this->chgIsoWrtWorstVtx.push_back(worstVertexChargedIso);
             }
         }
 
@@ -550,22 +466,13 @@ namespace flashgg {
 // ******************************************************************************************
 
     TorchDumper::TorchDumper( const edm::ParameterSet &iConfig ):
-        diphotonToken_( consumes<edm::View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "diphotonsInput" ) ) )
+        diphotonToken_( consumes<edm::View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "diphotonsInput" ) ) ),
+
+        outputFname( iConfig.getUntrackedParameter<std::string>("output") ),
+        writeRecHitsSparseFlag( iConfig.getUntrackedParameter<bool>("writeSparse")),
+        windowHalfWidth( iConfig.getUntrackedParameter<unsigned>("windowHalfWidth")),
+        windowHalfHeight( iConfig.getUntrackedParameter<unsigned>("windowHalfHeight"))
     {
-        ParameterSet barrelParams = iConfig.getUntrackedParameter<ParameterSet>( "barrel" );
-        barrelOutputFname = barrelParams.getUntrackedParameter<std::string>("output");
-        writeBarrelRecHitsSparse = barrelParams.getUntrackedParameter<bool>("writeSparse");
-
-        barrelWindowHalfWidth = barrelParams.getUntrackedParameter<unsigned>("windowHalfWidth");
-        barrelWindowHalfHeight = barrelParams.getUntrackedParameter<unsigned>("windowHalfHeight");
-
-
-        ParameterSet endcapParams = iConfig.getUntrackedParameter<ParameterSet>( "endcap" );
-        endcapOutputFname = endcapParams.getUntrackedParameter<std::string>("output");
-        writeEndcapRecHitsSparse = endcapParams.getUntrackedParameter<bool>("writeSparse");
-
-        endcapWindowHalfWidth = endcapParams.getUntrackedParameter<unsigned>("windowHalfWidth");
-        endcapWindowHalfHeight = endcapParams.getUntrackedParameter<unsigned>("windowHalfHeight");
     }
 
     TorchDumper::~TorchDumper()
@@ -610,26 +517,14 @@ namespace flashgg {
     void
     TorchDumper::endJob()
     {
-        // barrel
-        writeTorchData(barrelOutputFname,
-                       barrelRecHits, writeBarrelRecHitsSparse, barrelWindowHalfWidth, barrelWindowHalfHeight, 
-                       barrelLabels, 
-                       barrelWeights,
-                       barrelMVAid,
-                       barrelGenDeltaR,
-                       barrelChgIsoWrtChosenVtx,
-                       barrelChgIsoWrtWorstVtx
-                       );
-
-        // endcap
-        writeTorchData(endcapOutputFname,
-                       endcapRecHits, writeEndcapRecHitsSparse, endcapWindowHalfWidth, endcapWindowHalfHeight,
-                       endcapLabels,
-                       endcapWeights,
-                       endcapMVAid,
-                       endcapGenDeltaR,
-                       endcapChgIsoWrtChosenVtx,
-                       endcapChgIsoWrtWorstVtx
+        writeTorchData(outputFname,
+                       recHits, writeRecHitsSparseFlag, windowHalfWidth, windowHalfHeight, 
+                       labels, 
+                       weights,
+                       mvaID,
+                       genDeltaR,
+                       chgIsoWrtChosenVtx,
+                       chgIsoWrtWorstVtx
                        );
     }
 
@@ -643,10 +538,139 @@ namespace flashgg {
         descriptions.addDefault( desc );
     }
 
+    //----------------------------------------------------------------------
+
+    /** dumps endcap photons */
+    class TorchDumperBarrel : public TorchDumper
+    {
+        //----------------------------------------
+    public:
+        explicit TorchDumperBarrel( const edm::ParameterSet &iParams) : 
+            TorchDumper(iParams)
+        {
+        }
+
+        //----------------------------------------
+
+    protected:
+        // wrap around in phi for the barrel
+        virtual void wrapCoordinates(RecHitData &rechit)
+        {
+            while (rechit.dx < 0)
+                rechit.dx += 360;
+            
+            while (rechit.dx >= 360)
+                rechit.dx -= 360;
+        }
+
+        //----------------------------------------
+
+        virtual void fillRecHits(const flashgg::Photon &photon, std::vector<RecHitData> &rechits)
+        {
+            for (auto rechit : *photon.recHits())
+            {
+                if (rechit.detid().det() != DetId::Ecal)
+                    continue;
+
+                if (rechit.detid().subdetId() != EcalBarrel)
+                    continue;
+
+                EBDetId dt = EBDetId(rechit.detid());
+
+                RecHitData data;
+                data.energy = rechit.energy();
+                data.dx = dt.ieta();
+                data.dy = dt.iphi();
+
+                // eta goes from -85 to -1 then jumps to +1 to +85
+                // (i.e. there is no zero..)
+                if (data.dx < 0)
+                    data.dx += 1;
+
+                // iphi goes from 1 to 360, move it to 0.. 359
+                data.dy -= 1;
+                
+                rechits.push_back(data);
+
+            } // loop over rechits
+        }
+
+        //----------------------------------------
+
+        virtual bool isPhotonInSubdet(const flashgg::Photon &photon)
+        {
+            return fabs(photon.eta()) < etaMaxBarrel;
+        }
+
+    };
+
+    //----------------------------------------------------------------------
+
+    /** dumps barrel photons */
+    class TorchDumperEndcap : public TorchDumper
+    {
+        //----------------------------------------
+    public:
+
+        explicit TorchDumperEndcap( const edm::ParameterSet &iParams) : 
+            TorchDumper(iParams)
+        {
+        }
+
+        //----------------------------------------
+
+    protected:
+        virtual void wrapCoordinates(RecHitData &rechit)
+        {
+            // nothing to do in the endcap
+        }
+
+        //----------------------------------------
+
+        void fillRecHits(const flashgg::Photon &photon, std::vector<RecHitData> &rechits)
+        {
+            for (auto rechit : *photon.recHits())
+            {
+                if (rechit.detid().det() != DetId::Ecal)
+                    continue;
+
+                if (rechit.detid().subdetId() != EcalEndcap)
+                    continue;
+
+                EEDetId dt = EEDetId(rechit.detid());
+
+                RecHitData data;
+                data.energy = rechit.energy();
+                data.dx = dt.ix();
+                data.dy = dt.iy();
+
+                rechits.push_back(data);
+
+            } // loop over rechits
+        }
+
+        //----------------------------------------
+
+        virtual bool isPhotonInSubdet(const flashgg::Photon &photon)
+        {
+            return fabs(photon.eta()) >= etaMaxBarrel;
+        }
+        //----------------------------------------
+
+
+    };
+
+    //----------------------------------------------------------------------
+
 } // namespace flashgg
 
-typedef flashgg::TorchDumper FlashggTorchDumper;
-DEFINE_FWK_MODULE( FlashggTorchDumper );
+typedef flashgg::TorchDumperBarrel FlashggTorchDumperBarrel;
+DEFINE_FWK_MODULE( FlashggTorchDumperBarrel );
+
+typedef flashgg::TorchDumperEndcap FlashggTorchDumperEndcap;
+DEFINE_FWK_MODULE( FlashggTorchDumperEndcap );
+
+
 // Local Variables:
 // mode:c++
 // indent-tabs-mode:nil
