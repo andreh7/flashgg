@@ -335,4 +335,7 @@
 </class>
 <class name="std::vector<flashgg::TagCandidate>"/>
 <class name="edm::Wrapper<std::vector<flashgg::TagCandidate> >"/>
+
+<class name="flashgg::PhoIdMVAInputVars" ClassVersion="0" />
+<class name="edm::Wrapper<flashgg::PhoIdMVAInputVars>" />
 </lcgdict>

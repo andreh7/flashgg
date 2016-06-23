@@ -40,6 +40,7 @@
 #include "flashgg/DataFormats/interface/PDFWeightObject.h"
 #include "flashgg/DataFormats/interface/ZPlusJetTag.h"
 #include "flashgg/DataFormats/interface/TagCandidate.h"
+#include "flashgg/DataFormats/interface/PhoIdMVAInputVars.h"
 
 #include <vector>
 #include <map>
@@ -297,6 +298,9 @@ namespace  {
         edm::Wrapper<flashgg::TagCandidate>                      wrp_tags;
         std::vector<flashgg::TagCandidate>                       vec_tags;
         edm::Wrapper<std::vector<flashgg::TagCandidate> >    wrp_vec_tags;
+
+        flashgg::PhoIdMVAInputVars                                     phoIdMVAInputVars;
+        edm::Wrapper<flashgg::PhoIdMVAInputVars>                   wrp_phoIdMVAInputVars;
     };
 }
 // Local Variables:
