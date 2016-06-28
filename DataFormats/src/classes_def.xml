@@ -282,4 +282,9 @@
 
 <class name="flashgg::PhoIdMVAInputVars" ClassVersion="0" />
 <class name="edm::Wrapper<flashgg::PhoIdMVAInputVars>" />
+
+<class name="flashgg::DiPhotonPhoIdMVAInputVars" ClassVersion="0" />
+<class name="edm::Wrapper<flashgg::DiPhotonPhoIdMVAInputVars>" />
+<class name="std::map<edm::Ptr<flashgg::DiPhotonCandidate>,flashgg::DiPhotonPhoIdMVAInputVars>" />
+<class name="edm::Wrapper<std::map<edm::Ptr<flashgg::DiPhotonCandidate>,flashgg::DiPhotonPhoIdMVAInputVars> >" />
 </lcgdict>

@@ -35,6 +35,7 @@
 #include "flashgg/DataFormats/interface/ZPlusJetTag.h"
 #include "flashgg/DataFormats/interface/TagCandidate.h"
 #include "flashgg/DataFormats/interface/PhoIdMVAInputVars.h"
+#include "flashgg/DataFormats/interface/DiPhotonPhoIdMVAInputVars.h"
 
 #include <vector>
 #include <map>
@@ -273,6 +274,12 @@ namespace  {
 
         flashgg::PhoIdMVAInputVars                                     phoIdMVAInputVars;
         edm::Wrapper<flashgg::PhoIdMVAInputVars>                   wrp_phoIdMVAInputVars;
+
+        flashgg::DiPhotonPhoIdMVAInputVars                                                                       diPhotonPhoIdMVAInputVars;
+        edm::Wrapper<flashgg::DiPhotonPhoIdMVAInputVars>                                                     wrp_diPhotonPhoIdMVAInputVars;
+        std::map<edm::Ptr<flashgg::DiPhotonCandidate>,flashgg::DiPhotonPhoIdMVAInputVars>                    map_diPhotonPhoIdMVAInputVars;
+        edm::Wrapper<std::map<edm::Ptr<flashgg::DiPhotonCandidate>,flashgg::DiPhotonPhoIdMVAInputVars> > wrp_map_diPhotonPhoIdMVAInputVars;
+
     };
 }
 // Local Variables:
