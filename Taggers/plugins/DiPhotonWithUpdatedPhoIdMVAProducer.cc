@@ -9,6 +9,7 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "flashgg/MicroAOD/interface/PhotonIdUtils.h"
 #include "flashgg/DataFormats/interface/DiPhotonCandidate.h"
+#include "flashgg/DataFormats/interface/DiPhotonPhoIdMVAInputVars.h"
 
 #include "TFile.h"
 #include "TGraph.h"
@@ -55,6 +56,9 @@ namespace flashgg {
         }
 
         produces<std::vector<flashgg::DiPhotonCandidate> >();
+
+        // map of diphoton candidate to values of input variables for Photon ID MVA
+        produces<flashgg::DiPhotonPhoIdMVAInputVarsAssociation>();
     }
 
     void DiPhotonWithUpdatedPhoIdMVAProducer::produce( edm::Event &evt, const edm::EventSetup & )
@@ -67,6 +71,8 @@ namespace flashgg {
         const double rhoFixedGrd = *( rhoHandle.product() );
 
         auto_ptr<std::vector<flashgg::DiPhotonCandidate> > out_obj( new std::vector<flashgg::DiPhotonCandidate>() );
+        // allocate objects for all photons now already
+        std::vector<DiPhotonPhoIdMVAInputVars> phoIdMVAInputVars(objects->size());
 
         for (const auto & obj : *objects) {
             flashgg::DiPhotonCandidate *new_obj = obj.clone();
@@ -131,9 +137,13 @@ namespace flashgg {
             if (this->debug_) {
                 std::cout << " Input DiPhoton lead (sublead) MVA: " << obj.leadPhotonId() << " " << obj.subLeadPhotonId() << std::endl;
             }
-            float newleadmva = phoTools_.computeMVAWrtVtx( new_obj->getLeadingPhoton(), new_obj->vtx(), rhoFixedGrd, leadCorrectedEtaWidth );
+
+            DiPhotonPhoIdMVAInputVars &thisPhoIdMVAInputVars = phoIdMVAInputVars[out_obj->size()];
+            
+            // calculate photon ID mva output, keep track of the values of the input variables
+            float newleadmva = phoTools_.computeMVAWrtVtx( new_obj->getLeadingPhoton(), new_obj->vtx(), rhoFixedGrd, leadCorrectedEtaWidth, &thisPhoIdMVAInputVars.getInputsLeading());
             new_obj->getLeadingPhoton().setPhoIdMvaWrtVtx( new_obj->vtx(), newleadmva);
-            float newsubleadmva = phoTools_.computeMVAWrtVtx( new_obj->getSubLeadingPhoton(), new_obj->vtx(), rhoFixedGrd, subLeadCorrectedEtaWidth );
+            float newsubleadmva = phoTools_.computeMVAWrtVtx( new_obj->getSubLeadingPhoton(), new_obj->vtx(), rhoFixedGrd, subLeadCorrectedEtaWidth, &thisPhoIdMVAInputVars.getInputsSubLeading());
             new_obj->getSubLeadingPhoton().setPhoIdMvaWrtVtx( new_obj->vtx(), newsubleadmva);
             if (this->debug_) {
                 std::cout << " Output DiPhoton lead (sublead) MVA: " << new_obj->leadPhotonId() << " " << new_obj->subLeadPhotonId() << std::endl;
@@ -141,7 +151,25 @@ namespace flashgg {
             out_obj->push_back(*new_obj);
             delete new_obj;
         }
-        evt.put(out_obj);
+
+        // evt.put(..) returns an OrphanHandle (according to https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideEDMRef )
+        // which does not have provenance information
+        edm::OrphanHandle<std::vector<flashgg::DiPhotonCandidate> > diphotonCollHandle = evt.put(out_obj);
+
+        // get edm::Ptrs back from the newly produced collection
+        // (TODO: it would probably be cleaner to split this module into two: one which calculates
+        //        a product with the photon id input variables (per diphoton) and one which
+        //        then produces the updated diphotons with the new photon id output)
+        auto_ptr<flashgg::DiPhotonPhoIdMVAInputVarsAssociation> inputMap(new flashgg::DiPhotonPhoIdMVAInputVarsAssociation());
+
+        for (unsigned i = 0; i < diphotonCollHandle->size(); ++i)
+        {
+            inputMap->insert(make_pair(edm::Ptr<flashgg::DiPhotonCandidate>(diphotonCollHandle, i),
+                                      phoIdMVAInputVars[i]));
+        }
+
+        evt.put(inputMap);
+        
     }
 }
 
