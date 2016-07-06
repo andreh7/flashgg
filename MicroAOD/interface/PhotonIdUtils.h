@@ -59,7 +59,9 @@ namespace flashgg {
 
 
         void               setupMVA( const std::string &, const std::string & );
-        float              computeMVAWrtVtx( flashgg::Photon &, const edm::Ptr<reco::Vertex> &, const double, const double etaWidth = 0 );
+
+        /** @param phoIdMVAInputVars if non-NULL, values of the MVA input variables will be copied there */
+        float              computeMVAWrtVtx( flashgg::Photon &, const edm::Ptr<reco::Vertex> &, const double, const double etaWidth = 0, PhoIdMVAInputVars *phoIdMVAInputVars = NULL);
 
         static flashgg::Photon     pho4MomCorrection( edm::Ptr<flashgg::Photon> &, edm::Ptr<reco::Vertex> );
 
