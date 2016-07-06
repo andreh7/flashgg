@@ -8,6 +8,9 @@ flashggTorchDumperBarrel = cms.EDAnalyzer('FlashggTorchDumperBarrel',
                                           windowHalfWidth = cms.untracked.uint32(17),
                                           windowHalfHeight = cms.untracked.uint32(17),
                                           writeSparse = cms.untracked.bool(True),
+
+                                          photonIdInputVarsInputTag = cms.InputTag("flashggUpdatedIdMVADiPhotons"),
+                                          writePhotonIdInputVars = cms.untracked.bool(True),
                                           )
 
 flashggTorchDumperEndcap = cms.EDAnalyzer('FlashggTorchDumperEndcap',
@@ -18,4 +21,7 @@ flashggTorchDumperEndcap = cms.EDAnalyzer('FlashggTorchDumperEndcap',
                                           windowHalfWidth = cms.untracked.uint32(17),
                                           windowHalfHeight = cms.untracked.uint32(17),
                                           writeSparse = cms.untracked.bool(True),
+
+                                          photonIdInputVarsInputTag = cms.InputTag("flashggUpdatedIdMVADiPhotons"),
+                                          writePhotonIdInputVars = cms.untracked.bool(True),
                                           )
