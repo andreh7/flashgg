@@ -249,7 +249,8 @@ void PhotonIdUtils::setupMVA( const string &xmlfilenameEB, const string &xmlfile
 float PhotonIdUtils::computeMVAWrtVtx( /*edm::Ptr<flashgg::Photon>& photon,*/
     flashgg::Photon &photon,
     const edm::Ptr<reco::Vertex> &vtx,
-    const double rho, const double correctedEtaWidth)
+    const double rho, const double correctedEtaWidth,
+    PhoIdMVAInputVars *phoIdMVAInputVars)
 {
 
     this->phoIdInputVars.scRawE          = photon.superCluster()->rawEnergy();
@@ -274,6 +275,11 @@ float PhotonIdUtils::computeMVAWrtVtx( /*edm::Ptr<flashgg::Photon>& photon,*/
     else if( photon.isEE() ) { phoIdMva = phoIdMva_EE_; }
 
     float mvavalue = phoIdMva->EvaluateMVA( "BDT" );
+
+    if (phoIdMVAInputVars != NULL)
+        // copy values of MVA input variables
+        *phoIdMVAInputVars = this->phoIdInputVars;
+
     return mvavalue;
 }
 
