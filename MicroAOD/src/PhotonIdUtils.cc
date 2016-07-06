@@ -255,7 +255,8 @@ void PhotonIdUtils::setupMVA( const string &xmlfilenameEB, const string &xmlfile
 float PhotonIdUtils::computeMVAWrtVtx( /*edm::Ptr<flashgg::Photon>& photon,*/
     flashgg::Photon &photon,
     const edm::Ptr<reco::Vertex> &vtx,
-    const double rho, const double correctedEtaWidth,  const double eA, const std::vector<double> _phoIsoPtScalingCoeff, const double _phoIsoCutoff )
+    const double rho, const double correctedEtaWidth,  const double eA, const std::vector<double> _phoIsoPtScalingCoeff, const double _phoIsoCutoff, 
+    PhoIdMVAInputVars *phoIdMVAInputVars)
 {
 
     this->phoIdInputVars.scRawE          = photon.superCluster()->rawEnergy();
@@ -265,50 +266,41 @@ float PhotonIdUtils::computeMVAWrtVtx( /*edm::Ptr<flashgg::Photon>& photon,*/
     if (correctedEtaWidth == 0.)
         this->phoIdInputVars.etaWidth        = photon.superCluster()->etaWidth();
     else
-<<<<<<< HEAD
-        phoIdMva_EtaWidth_        = correctedEtaWidth;
-    phoIdMva_PhiWidth_        = photon.superCluster()->phiWidth();
-    phoIdMva_covIEtaIPhi_     = photon.sieip();
-    phoIdMva_pfPhoIso03_      = photon.pfPhoIso03();
+        this->phoIdInputVars.etaWidth        = correctedEtaWidth;
+    this->phoIdInputVars.phiWidth        = photon.superCluster()->phiWidth();
+    this->phoIdInputVars.covIEtaIPhi     = photon.sieip();
+    this->phoIdInputVars.pfPhoIso03      = photon.pfPhoIso03();
 
     //pho iso corr in 2016 for endcap
-    phoIdMva_pfPhoIso03Corr_ = photon.pfPhoIso03();
+    this->phoIdInputVars.pfPhoIso03Corr  = photon.pfPhoIso03();
 
     //    double eA = _effectiveAreas.getEffectiveArea( abs(photon.superCluster()->eta()) );
     double phoIsoPtScalingCoeffVal = 0;
     if( photon.isEB() ) 
-    phoIsoPtScalingCoeffVal = _phoIsoPtScalingCoeff.at(0); // barrel case
+        phoIsoPtScalingCoeffVal = _phoIsoPtScalingCoeff.at(0); // barrel case
     else
         phoIsoPtScalingCoeffVal =  _phoIsoPtScalingCoeff.at(1); //endcap case
     
     double phoIsoCorr = photon.pfPhoIso03() - eA*(rho) - phoIsoPtScalingCoeffVal*photon.pt();
     
-    phoIdMva_pfPhoIso03Corr_ = TMath::Max(phoIsoCorr, _phoIsoCutoff);
+    this->phoIdInputVars.pfPhoIso03Corr  = TMath::Max(phoIsoCorr, _phoIsoCutoff);
     
-    phoIdMva_pfChgIso03_      = photon.pfChgIso03WrtVtx( vtx );
-    phoIdMva_pfChgIso03worst_ = photon.pfChgIsoWrtWorstVtx03();
-    phoIdMva_ScEta_           = photon.superCluster()->eta();
-    phoIdMva_rho_             = rho; // we don't want to add the event-based rho as flashgg::photon member
-    phoIdMva_ESEffSigmaRR_    = photon.esEffSigmaRR();
-    phoIdMva_esEnovSCRawEn_   = photon.superCluster()->preshowerEnergy()/photon.superCluster()->rawEnergy();
-        
-=======
-        this->phoIdInputVars.etaWidth        = correctedEtaWidth;
-    this->phoIdInputVars.phiWidth        = photon.superCluster()->phiWidth();
-    this->phoIdInputVars.covIEtaIPhi     = photon.sieip();
-    this->phoIdInputVars.pfPhoIso03      = photon.pfPhoIso03();
     this->phoIdInputVars.pfChgIso03      = photon.pfChgIso03WrtVtx( vtx );
     this->phoIdInputVars.pfChgIso03worst = photon.pfChgIsoWrtWorstVtx03();
     this->phoIdInputVars.scEta           = photon.superCluster()->eta();
     this->phoIdInputVars.rho             = rho; // we don't want to add the event-based rho as flashgg::photon member
     this->phoIdInputVars.esEffSigmaRR    = photon.esEffSigmaRR();
-
-
->>>>>>> class PhotonIdUtils now uses a field PhoIdMVAInputVars to store the photon ID mva input variables instead of individual fields
+    this->phoIdInputVars.esEnovSCRawEn   = photon.superCluster()->preshowerEnergy()/photon.superCluster()->rawEnergy();
+        
     if( photon.isEB() )      { phoIdMva = phoIdMva_EB_; }
     else if( photon.isEE() ) { phoIdMva = phoIdMva_EE_; }
 
     float mvavalue = phoIdMva->EvaluateMVA( "BDT" );
+
+    if (phoIdMVAInputVars != NULL)
+        // copy values of MVA input variables
+        *phoIdMVAInputVars = this->phoIdInputVars;
+
     return mvavalue;
 }
 
