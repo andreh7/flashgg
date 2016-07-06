@@ -28,6 +28,7 @@
 #include "flashgg/DataFormats/interface/VHHadronicTag.h"
 #include "flashgg/DataFormats/interface/VBFTagTruth.h"
 #include "flashgg/DataFormats/interface/ZPlusJetTag.h"
+#include "flashgg/DataFormats/interface/DiPhotonPhoIdMVAInputVars.h"
 
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
@@ -215,6 +216,30 @@ namespace flashgg {
         std::vector<float> chgIsoWrtChosenVtx;
         std::vector<float> chgIsoWrtWorstVtx;
 
+        /** whether to also write the official photon ID mva input variables or not */
+        const bool writePhotonIdInputVarsFlag;
+
+        /** value map for diphoton input variables association */
+        edm::EDGetTokenT<flashgg::DiPhotonPhoIdMVAInputVarsAssociation> phoIdInputVarsToken;
+
+        //----------
+        // photon BDT id input variables
+        //----------
+
+        std::vector<float> scRawE,
+            r9,
+            covIEtaIEta,
+            phiWidth,
+            etaWidth,
+            covIEtaIPhi,
+            s4,
+            pfPhoIso03,
+            pfChgIso03,       // duplicate of above
+            pfChgIso03worst,  // duplicate of above
+            scEta,
+            rho,
+            esEffSigmaRR;
+
         /** boundary between barrel and endcap */
         const float etaMaxBarrel = 1.5;
 
@@ -279,7 +304,8 @@ namespace flashgg {
 
         void addPhoton(const flashgg::Photon &photon, float weight, float mvaID,
                        float chosenVertexChargedIso,
-                       float worstVertexChargedIso
+                       float worstVertexChargedIso,
+                       const PhoIdMVAInputVars *phoIdInputVars
                        )
         {
             float label = photon.genMatchType() == flashgg::Photon::kPrompt ? 1 : 0;
@@ -309,6 +335,24 @@ namespace flashgg {
                 // track isolation variables
                 this->chgIsoWrtChosenVtx.push_back(chosenVertexChargedIso);
                 this->chgIsoWrtWorstVtx.push_back(worstVertexChargedIso);
+
+                // photon ID input variables
+                if (phoIdInputVars != NULL)
+                    {
+                        scRawE          .push_back( phoIdInputVars->scRawE          );
+                        r9              .push_back( phoIdInputVars->r9              );
+                        covIEtaIEta     .push_back( phoIdInputVars->covIEtaIEta     );
+                        phiWidth        .push_back( phoIdInputVars->phiWidth        );
+                        etaWidth        .push_back( phoIdInputVars->etaWidth        );
+                        covIEtaIPhi     .push_back( phoIdInputVars->covIEtaIPhi     );
+                        s4              .push_back( phoIdInputVars->s4              );
+                        pfPhoIso03      .push_back( phoIdInputVars->pfPhoIso03      );
+                        pfChgIso03      .push_back( phoIdInputVars->pfChgIso03      );
+                        pfChgIso03worst .push_back( phoIdInputVars->pfChgIso03worst );
+                        scEta           .push_back( phoIdInputVars->scEta           );
+                        rho             .push_back( phoIdInputVars->rho             );
+                        esEffSigmaRR    .push_back( phoIdInputVars->esEffSigmaRR    );
+                    }
             }
         }
 
@@ -425,7 +469,11 @@ namespace flashgg {
             //  mvaid (for comparison)
             //  charged isolation w.r.t. chosen vertex
             //  charged isolation w.r.t. worst vertex
-            const unsigned tableSize = 7;
+            unsigned tableSize = 7;
+
+            if (writePhotonIdInputVarsFlag)
+                // add sub-recrod with photon id input variables
+                tableSize += 1;
 
             std::ofstream os(outputFname.c_str());
 
@@ -449,6 +497,29 @@ namespace flashgg {
 
             writeInt(os, MAGIC_STRING); writeString(os, "chgIsoWrtChosenVtx");  writeTypeVector(os, objectIndex, chgIsoWrtChosenVtx);
             writeInt(os, MAGIC_STRING); writeString(os, "chgIsoWrtWorstVtx");   writeTypeVector(os, objectIndex, chgIsoWrtWorstVtx);
+
+            if (writePhotonIdInputVarsFlag)
+                {
+                    writeInt(os, MAGIC_STRING); writeString(os, "phoIdInput");      
+
+                    writeInt(os, MAGIC_TABLE);
+                    writeInt(os, objectIndex++);
+                    writeInt(os, 13); // number of input variables
+
+                    writeInt(os, MAGIC_STRING); writeString(os, "scRawE"          );  writeTypeVector(os, objectIndex, scRawE          );
+                    writeInt(os, MAGIC_STRING); writeString(os, "r9"              );  writeTypeVector(os, objectIndex, r9              );
+                    writeInt(os, MAGIC_STRING); writeString(os, "covIEtaIEta"     );  writeTypeVector(os, objectIndex, covIEtaIEta     );
+                    writeInt(os, MAGIC_STRING); writeString(os, "phiWidth"        );  writeTypeVector(os, objectIndex, phiWidth        );
+                    writeInt(os, MAGIC_STRING); writeString(os, "etaWidth"        );  writeTypeVector(os, objectIndex, etaWidth        );
+                    writeInt(os, MAGIC_STRING); writeString(os, "covIEtaIPhi"     );  writeTypeVector(os, objectIndex, covIEtaIPhi     );
+                    writeInt(os, MAGIC_STRING); writeString(os, "s4"              );  writeTypeVector(os, objectIndex, s4              );
+                    writeInt(os, MAGIC_STRING); writeString(os, "pfPhoIso03"      );  writeTypeVector(os, objectIndex, pfPhoIso03      );
+                    writeInt(os, MAGIC_STRING); writeString(os, "pfChgIso03"      );  writeTypeVector(os, objectIndex, pfChgIso03      );
+                    writeInt(os, MAGIC_STRING); writeString(os, "pfChgIso03worst" );  writeTypeVector(os, objectIndex, pfChgIso03worst );
+                    writeInt(os, MAGIC_STRING); writeString(os, "scEta"           );  writeTypeVector(os, objectIndex, scEta           );
+                    writeInt(os, MAGIC_STRING); writeString(os, "rho"             );  writeTypeVector(os, objectIndex, rho             );
+                    writeInt(os, MAGIC_STRING); writeString(os, "esEffSigmaRR"    );  writeTypeVector(os, objectIndex, esEffSigmaRR    );
+                }
         }
 
     };
@@ -462,8 +533,15 @@ namespace flashgg {
         outputFname( iConfig.getUntrackedParameter<std::string>("output") ),
         writeRecHitsSparseFlag( iConfig.getUntrackedParameter<bool>("writeSparse")),
         windowHalfWidth( iConfig.getUntrackedParameter<unsigned>("windowHalfWidth")),
-        windowHalfHeight( iConfig.getUntrackedParameter<unsigned>("windowHalfHeight"))
+        windowHalfHeight( iConfig.getUntrackedParameter<unsigned>("windowHalfHeight")),
+
+        writePhotonIdInputVarsFlag ( iConfig.getUntrackedParameter<bool>("writePhotonIdInputVars"))
     {
+        if (writePhotonIdInputVarsFlag)
+        {
+            phoIdInputVarsToken = consumes<flashgg::DiPhotonPhoIdMVAInputVarsAssociation>( iConfig.getParameter<InputTag> ( "photonIdInputVarsInputTag" ));
+        }
+
     }
 
     TorchDumper::~TorchDumper()
@@ -477,27 +555,52 @@ namespace flashgg {
         Handle<edm::View<flashgg::DiPhotonCandidate> > diphotons;
         iEvent.getByToken( diphotonToken_, diphotons );
 
-        //for ( auto photon = photons.product()->begin(); photon != photons.product()->end(); ++photon)
-        for ( auto diphoton : *diphotons.product()) {
+        Handle<flashgg::DiPhotonPhoIdMVAInputVarsAssociation> phoIdInputVarsHandle;
+
+        if (writePhotonIdInputVarsFlag)
+            iEvent.getByToken(phoIdInputVarsToken, phoIdInputVarsHandle);
+
+        //----------------------------------------
+
+        unsigned diphotonIndex = 0;
+        for ( auto diphoton = diphotons.product()->begin(); diphoton != diphotons.product()->end(); ++diphoton, ++diphotonIndex)
+        {
             // TODO: should we take the square root of the event weight for photons ?
             // TODO: check if this corresponds to the final event weight ?!
-            float weight = diphoton.centralWeight();
+            float weight = diphoton->centralWeight();
 
-            addPhoton(*diphoton.leadingPhoton(), weight, 
-                      diphoton.leadingView()->phoIdMvaWrtChosenVtx(),
-                      diphoton.leadingView()->pfChIso03WrtChosenVtx(),
-                      diphoton.leadingPhoton()->pfChgIsoWrtWorstVtx04()
+            const PhoIdMVAInputVars *phoIdInputVarsLeading = NULL, *phoIdInputVarsSubLeading = NULL;
+
+            // make sure the edm::Ref is not destroyed after the 'if' body
+            std::vector<edm::Ptr<flashgg::DiPhotonCandidate>> diphotonPointers = diphotons->ptrs();
+
+            if (writePhotonIdInputVarsFlag)
+                {
+                    // do NOT make a copy, we use a pointer instead so that the object
+                    // is not destroyed at the end of the 'if' body and the pointers
+                    // to the leading and subleading photon variable values remain valid
+
+                    const DiPhotonPhoIdMVAInputVars *diphoInputVars = &(phoIdInputVarsHandle->at(diphotonPointers[diphotonIndex]));
+                    phoIdInputVarsLeading = &(diphoInputVars->getInputsLeading());
+                    phoIdInputVarsSubLeading = &(diphoInputVars->getInputsSubLeading());
+                }
+
+            addPhoton(*diphoton->leadingPhoton(), weight, 
+                      diphoton->leadingView()->phoIdMvaWrtChosenVtx(),
+                      diphoton->leadingView()->pfChIso03WrtChosenVtx(),
+                      diphoton->leadingPhoton()->pfChgIsoWrtWorstVtx04(),
+                      phoIdInputVarsLeading
                       );
-            addPhoton(*diphoton.subLeadingPhoton(), weight, 
-                      diphoton.subLeadingView()->phoIdMvaWrtChosenVtx(),
-                      diphoton.subLeadingView()->pfChIso03WrtChosenVtx(),
-                      diphoton.subLeadingPhoton()->pfChgIsoWrtWorstVtx04()
-
+            addPhoton(*diphoton->subLeadingPhoton(), weight, 
+                      diphoton->subLeadingView()->phoIdMvaWrtChosenVtx(),
+                      diphoton->subLeadingView()->pfChIso03WrtChosenVtx(),
+                      diphoton->subLeadingPhoton()->pfChgIsoWrtWorstVtx04(),
+                      phoIdInputVarsSubLeading
                       );
 
             // only consider the first pair (how are they sorted ?)
             break;
-        }
+        } // loop over diphotons
     } // analyze
 
     void
