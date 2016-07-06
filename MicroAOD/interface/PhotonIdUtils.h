@@ -14,6 +14,7 @@
 
 #include "flashgg/DataFormats/interface/Photon.h"
 #include "flashgg/DataFormats/interface/VertexCandidateMap.h"
+#include "flashgg/DataFormats/interface/PhoIdMVAInputVars.h"
 
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
@@ -142,21 +143,9 @@ namespace flashgg {
         bool removeOverlappingCandidates_;
         double deltaPhiRotation_;
 
-        // photon MVA variables: move to more sophisticated object?
-
-        float phoIdMva_SCRawE_;
-        float phoIdMva_R9_;
-        float phoIdMva_covIEtaIEta_;
-        float phoIdMva_PhiWidth_;
-        float phoIdMva_EtaWidth_;
-        float phoIdMva_covIEtaIPhi_;
-        float phoIdMva_S4_;
-        float phoIdMva_pfPhoIso03_;
-        float phoIdMva_pfChgIso03_;
-        float phoIdMva_pfChgIso03worst_;
-        float phoIdMva_ScEta_;
-        float phoIdMva_rho_;
-        float phoIdMva_ESEffSigmaRR_;
+        // photon MVA input variables
+        
+        PhoIdMVAInputVars phoIdInputVars;
 
         std::shared_ptr<TMVA::Reader> phoIdMva_EB_;
         std::shared_ptr<TMVA::Reader> phoIdMva_EE_;

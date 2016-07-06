@@ -211,37 +211,37 @@ void PhotonIdUtils::setupMVA( const string &xmlfilenameEB, const string &xmlfile
 
     phoIdMva_EB_ = make_shared<TMVA::Reader>( "!Color:Silent" );
 
-    phoIdMva_EB_->AddVariable( "SCRawE", &phoIdMva_SCRawE_ );
-    phoIdMva_EB_->AddVariable( "r9",                &phoIdMva_R9_ );
-    phoIdMva_EB_->AddVariable( "sigmaIetaIeta",       &phoIdMva_covIEtaIEta_ );
-    phoIdMva_EB_->AddVariable( "etaWidth",        &phoIdMva_EtaWidth_ );
-    phoIdMva_EB_->AddVariable( "phiWidth",        &phoIdMva_PhiWidth_ );
-    phoIdMva_EB_->AddVariable( "covIEtaIPhi", &phoIdMva_covIEtaIPhi_ );
-    phoIdMva_EB_->AddVariable( "s4",     &phoIdMva_S4_ );
-    phoIdMva_EB_->AddVariable( "phoIso03",    &phoIdMva_pfPhoIso03_ );
-    phoIdMva_EB_->AddVariable( "chgIsoWrtChosenVtx",   &phoIdMva_pfChgIso03_ );
-    phoIdMva_EB_->AddVariable( "chgIsoWrtWorstVtx", &phoIdMva_pfChgIso03worst_ );
-    phoIdMva_EB_->AddVariable( "scEta",             &phoIdMva_ScEta_ );
-    phoIdMva_EB_->AddVariable( "rho",                  &phoIdMva_rho_ );
+    phoIdMva_EB_->AddVariable( "SCRawE",             &phoIdInputVars.scRawE );
+    phoIdMva_EB_->AddVariable( "r9",                 &phoIdInputVars.r9 );
+    phoIdMva_EB_->AddVariable( "sigmaIetaIeta",      &phoIdInputVars.covIEtaIEta );
+    phoIdMva_EB_->AddVariable( "etaWidth",           &phoIdInputVars.etaWidth );
+    phoIdMva_EB_->AddVariable( "phiWidth",           &phoIdInputVars.phiWidth );
+    phoIdMva_EB_->AddVariable( "covIEtaIPhi",        &phoIdInputVars.covIEtaIPhi );
+    phoIdMva_EB_->AddVariable( "s4",                 &phoIdInputVars.s4 );
+    phoIdMva_EB_->AddVariable( "phoIso03",           &phoIdInputVars.pfPhoIso03 );
+    phoIdMva_EB_->AddVariable( "chgIsoWrtChosenVtx", &phoIdInputVars.pfChgIso03 );
+    phoIdMva_EB_->AddVariable( "chgIsoWrtWorstVtx",  &phoIdInputVars.pfChgIso03worst );
+    phoIdMva_EB_->AddVariable( "scEta",              &phoIdInputVars.scEta );
+    phoIdMva_EB_->AddVariable( "rho",                &phoIdInputVars.rho );
     phoIdMva_EB_->BookMVA( mvamethod.c_str(), xmlfilenameEB );
 
     // **** bdt 2015 EE ****
 
     phoIdMva_EE_ = make_shared<TMVA::Reader>( "!Color:Silent" );
 
-    phoIdMva_EE_->AddVariable( "SCRawE", &phoIdMva_SCRawE_ );
-    phoIdMva_EE_->AddVariable( "r9",                &phoIdMva_R9_ );
-    phoIdMva_EE_->AddVariable( "sigmaIetaIeta",       &phoIdMva_covIEtaIEta_ );
-    phoIdMva_EE_->AddVariable( "etaWidth",        &phoIdMva_EtaWidth_ );
-    phoIdMva_EE_->AddVariable( "phiWidth",        &phoIdMva_PhiWidth_ );
-    phoIdMva_EE_->AddVariable( "covIEtaIPhi", &phoIdMva_covIEtaIPhi_ );
-    phoIdMva_EE_->AddVariable( "s4",     &phoIdMva_S4_ );
-    phoIdMva_EE_->AddVariable( "phoIso03",    &phoIdMva_pfPhoIso03_ );
-    phoIdMva_EE_->AddVariable( "chgIsoWrtChosenVtx",   &phoIdMva_pfChgIso03_ );
-    phoIdMva_EE_->AddVariable( "chgIsoWrtWorstVtx", &phoIdMva_pfChgIso03worst_ );
-    phoIdMva_EE_->AddVariable( "scEta",             &phoIdMva_ScEta_ );
-    phoIdMva_EE_->AddVariable( "rho",                  &phoIdMva_rho_ );
-    phoIdMva_EE_->AddVariable( "esEffSigmaRR",   &phoIdMva_ESEffSigmaRR_ );
+    phoIdMva_EE_->AddVariable( "SCRawE",             &phoIdInputVars.scRawE );
+    phoIdMva_EE_->AddVariable( "r9",                 &phoIdInputVars.r9 );
+    phoIdMva_EE_->AddVariable( "sigmaIetaIeta",      &phoIdInputVars.covIEtaIEta );
+    phoIdMva_EE_->AddVariable( "etaWidth",           &phoIdInputVars.etaWidth );
+    phoIdMva_EE_->AddVariable( "phiWidth",           &phoIdInputVars.phiWidth );
+    phoIdMva_EE_->AddVariable( "covIEtaIPhi",        &phoIdInputVars.covIEtaIPhi );
+    phoIdMva_EE_->AddVariable( "s4",                 &phoIdInputVars.s4 );
+    phoIdMva_EE_->AddVariable( "phoIso03",           &phoIdInputVars.pfPhoIso03 );
+    phoIdMva_EE_->AddVariable( "chgIsoWrtChosenVtx", &phoIdInputVars.pfChgIso03 );
+    phoIdMva_EE_->AddVariable( "chgIsoWrtWorstVtx",  &phoIdInputVars.pfChgIso03worst );
+    phoIdMva_EE_->AddVariable( "scEta",              &phoIdInputVars.scEta );
+    phoIdMva_EE_->AddVariable( "rho",                &phoIdInputVars.rho );
+    phoIdMva_EE_->AddVariable( "esEffSigmaRR",       &phoIdInputVars.esEffSigmaRR );
     phoIdMva_EE_->BookMVA( mvamethod.c_str(), xmlfilenameEE );
 }
 
@@ -252,22 +252,22 @@ float PhotonIdUtils::computeMVAWrtVtx( /*edm::Ptr<flashgg::Photon>& photon,*/
     const double rho, const double correctedEtaWidth)
 {
 
-    phoIdMva_SCRawE_          = photon.superCluster()->rawEnergy();
-    phoIdMva_R9_              = photon.full5x5_r9();
-    phoIdMva_S4_              = photon.s4();
-    phoIdMva_covIEtaIEta_     = photon.full5x5_sigmaIetaIeta();
+    this->phoIdInputVars.scRawE          = photon.superCluster()->rawEnergy();
+    this->phoIdInputVars.r9              = photon.full5x5_r9();
+    this->phoIdInputVars.s4              = photon.s4();
+    this->phoIdInputVars.covIEtaIEta     = photon.full5x5_sigmaIetaIeta();
     if (correctedEtaWidth == 0.)
-        phoIdMva_EtaWidth_        = photon.superCluster()->etaWidth();
+        this->phoIdInputVars.etaWidth        = photon.superCluster()->etaWidth();
     else
-        phoIdMva_EtaWidth_        = correctedEtaWidth;
-    phoIdMva_PhiWidth_        = photon.superCluster()->phiWidth();
-    phoIdMva_covIEtaIPhi_     = photon.sieip();
-    phoIdMva_pfPhoIso03_      = photon.pfPhoIso03();
-    phoIdMva_pfChgIso03_      = photon.pfChgIso03WrtVtx( vtx );
-    phoIdMva_pfChgIso03worst_ = photon.pfChgIsoWrtWorstVtx03();
-    phoIdMva_ScEta_           = photon.superCluster()->eta();
-    phoIdMva_rho_             = rho; // we don't want to add the event-based rho as flashgg::photon member
-    phoIdMva_ESEffSigmaRR_    = photon.esEffSigmaRR();
+        this->phoIdInputVars.etaWidth        = correctedEtaWidth;
+    this->phoIdInputVars.phiWidth        = photon.superCluster()->phiWidth();
+    this->phoIdInputVars.covIEtaIPhi     = photon.sieip();
+    this->phoIdInputVars.pfPhoIso03      = photon.pfPhoIso03();
+    this->phoIdInputVars.pfChgIso03      = photon.pfChgIso03WrtVtx( vtx );
+    this->phoIdInputVars.pfChgIso03worst = photon.pfChgIsoWrtWorstVtx03();
+    this->phoIdInputVars.scEta           = photon.superCluster()->eta();
+    this->phoIdInputVars.rho             = rho; // we don't want to add the event-based rho as flashgg::photon member
+    this->phoIdInputVars.esEffSigmaRR    = photon.esEffSigmaRR();
 
 
     if( photon.isEB() )      { phoIdMva = phoIdMva_EB_; }
