@@ -117,6 +117,13 @@ class JobsManager(object):
                 make_option("--no-copy-proxy",dest="copy_proxy",action="store_false",
                             default=True,help="Do not try to copy the grid proxy to the worker nodes."
                             ),
+                make_option("--additional-ds-suffix", 
+                            default = None,
+                            dest="additionalDatasetSuffix",
+                            type="string",
+                            help="specify secondaryDataset/dataTier to be used as a secondary input source (e.g. AODSIM)"
+                            ),
+
                 ]
                               )
         
@@ -135,6 +142,10 @@ class JobsManager(object):
         self.uniqueNames = {}
 
         # self.checkCrossSections()
+
+        if self.options.additionalDatasetSuffix != None:
+            # remove any leading and trailing slashes
+            self.options.additionalDatasetSuffix = self.options.additionalDatasetSuffix.strip('/')
 
     # -------------------------------------------------------------------------------------------------------------------
     def __call__(self):
@@ -278,6 +289,36 @@ class JobsManager(object):
         
         jobs = []
 
+        #----------
+        # get list of known samples if an additional dataset suffix was specified
+        #----------
+        if self.options.additionalDatasetSuffix != None:
+            # first get the campaign name
+            kwargs = {}
+            import re
+            for part in re.split('\s+', self.options.cmdLine):
+                if '=' in part:
+                    key, value = part.split('=',1)
+                else:
+                    key, value = part, None
+                kwargs[key] = value
+
+            if not kwargs.has_key('campaign'):
+                print >> sys.stderr,"WARNING: campaign not set"
+
+            campaign = kwargs.get('campaign', "")
+
+            from flashgg.MetaData.JobConfig import JobConfig
+            jobConfig = JobConfig(**kwargs)
+
+            # create a SamplesManager
+            from flashgg.MetaData.samples_utils import SamplesManager
+            samplesManager = SamplesManager("$CMSSW_BASE/src/%s/MetaData/data/%s/datasets.json" % (jobConfig.metaDataSrc, campaign))
+            
+            knownDatasets = samplesManager.getAllDatasets()[0]
+
+        #----------
+
         for name,datasets in options.processes.iteritems():
             poutfiles[name] = ( "%s_%s.root" % ( outputPfx,name), [] )
         
@@ -309,6 +350,28 @@ class JobsManager(object):
                 outfile = "%s_%s.root" % ( outputPfx, dsetName )
                 doutfiles[dsetName] = ( str(outfile),[] )
                 jobargs.extend( ["dataset=%s" % dset, "outputFile=%s" % outfile ] )
+
+                #----------
+                # check if a secondary dataset (e.g. AODSIM) was specified
+                #----------
+                if self.options.additionalDatasetSuffix != None:
+                    # dest seems to be the full dataset name here (all three elements
+                    # are specified)
+                    parts = dset.split('/')
+                    assert len(parts) == 4, "expected dset to be of the form /primary/next/datatier but it is " + dset + " instead"
+                    additionalDset = "/" + parts[1] + "/" + self.options.additionalDatasetSuffix
+
+                    # check if the resulting secondary dataset actually exists in our catalog
+                    if not additionalDset in knownDatasets:
+                        print >> sys.stderr,"additional dataset",additionalDset,"was not found in the catalog, exiting"
+                        sys.exit(1)
+
+                    # add to command line arguments
+                    jobargs.append("dataset2=" + additionalDset)
+
+                #----------
+
+
                 # add (and replace) per-dataset job arguments
                 dargs = dopts.get("args",[])
                 if type(dargs) != list:
