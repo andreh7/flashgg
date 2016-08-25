@@ -196,6 +196,24 @@ customize.setDefault("targetLumi",2.61e+3)
 # call the customization
 customize(process)
 
+if False:
+    # for testing the actual EDM product
+    process.out = cms.OutputModule("PoolOutputModule",
+          fileName = cms.untracked.string("out.root"),
+    outputCommands = cms.untracked.vstring([
+      "keep *_flashggUpdatedIdMVADiPhotons_*_*",
+      "keep *_flashggPreselectedDiPhotons_*_*",
+    ])
+        )
+    process.ep = cms.EndPath( process.out)
+
+
+# process.source.fileNames = cms.untracked.vstring([ "file:/tmp/myMicroAODOutputFile_1.root" ])
+
+# process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
+
+
+
 # take the collection produced based on the preselected photons (without applying corrections again)
 # instead of the collection produced just with the corrections (but without preselection)
 for mod in (process.flashggTorchDumperBarrel, process.flashggTorchDumperEndcap):
