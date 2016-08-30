@@ -52,4 +52,9 @@ flashggPhotons = cms.EDProducer('FlashggPhotonProducer',
 
                                 egmMvaValuesMap = cms.InputTag("photonMVAValueMapProducer:PhotonMVAEstimatorRun2Spring16NonTrigV1Values"),
 				embedRecHits = cms.bool(True),
+                                recHitWindowIeta = cms.uint32(35),
+                                recHitWindowIphi = cms.uint32(35),
+                                recHitWindowIx   = cms.uint32(35),
+                                recHitWindowIy   = cms.uint32(35),
+
                               )
