@@ -87,6 +87,10 @@ namespace flashgg {
 
         /** whether or not to embed rechits into the Photon objects */
         const bool embedRecHits;
+
+        /** full window sizes for embedding rechits */
+        unsigned recHitWindowIeta, recHitWindowIphi; // barrel
+        unsigned recHitWindowIx,   recHitWindowIy;   // endcap
     };
 
 
@@ -103,7 +107,12 @@ namespace flashgg {
         electronToken_( consumes<std::vector<pat::Electron> >( iConfig.getParameter<edm::InputTag>( "elecTag") ) ),
         convToken_( consumes<reco::ConversionCollection>( iConfig.getParameter<edm::InputTag>( "convTag" ) ) ),
         beamSpotToken_( consumes<reco::BeamSpot >( iConfig.getParameter<edm::InputTag>( "beamSpotTag" ) ) ),
-        embedRecHits(iConfig.getParameter<bool>("embedRecHits"))
+
+        embedRecHits(iConfig.getParameter<bool>("embedRecHits")),
+        recHitWindowIeta(iConfig.getParameter<unsigned>("recHitWindowIeta")),
+        recHitWindowIphi(iConfig.getParameter<unsigned>("recHitWindowIphi")),
+        recHitWindowIx(iConfig.getParameter<unsigned>("recHitWindowIx")),
+        recHitWindowIy(iConfig.getParameter<unsigned>("recHitWindowIy"))
     {
 
         //        electronLabel_ = iConfig.getParameter<string>( "elecLabel" );
@@ -375,17 +384,18 @@ namespace flashgg {
 			// see e.g. https://github.com/cms-sw/cmssw/blob/CMSSW_7_4_X/DataFormats/Common/interface/Ptr.h
 			// cout << "available=" << cluster.isAvailable() << endl;
 
-			if (false)
+            // unconditinally add a fixed size window around the seed crystal
 			{
 				// get seed crystal of the (basic) cluster
 				DetId seed = lazyTools.getMaximum(*cluster).first;
 				
-				// now get all crystals in a 5x5 window
-				std::vector<DetId> dets5x5 = (barrel) ? 
-					ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalBarrel)->getWindow(seed,5,5) :
-					ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalEndcap)->getWindow(seed,5,5);
+				// now get all crystals in a n by m window
+				std::vector<DetId> detsWindow = (barrel) ? 
+                    // TODO: are the window coordinate names correct ?!
+					ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalBarrel)->getWindow(seed, recHitWindowIeta, recHitWindowIphi) :
+					ecalTopology_->getSubdetectorTopology(DetId::Ecal,EcalEndcap)->getWindow(seed, recHitWindowIx, recHitWindowIy);
 				
-				std::copy(dets5x5.begin(), dets5x5.end(), std::inserter(selectedCells, selectedCells.end()));
+				std::copy(detsWindow.begin(), detsWindow.end(), std::inserter(selectedCells, selectedCells.end()));
 			}
 
 			// add those crystals otherwise associated to the cluster
