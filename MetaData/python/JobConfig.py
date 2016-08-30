@@ -22,6 +22,13 @@ class JobConfig(object):
                        VarParsing.VarParsing.multiplicity.singleton, # singleton or list
                        VarParsing.VarParsing.varType.string,          # string, int, or float
                        "dataset")
+
+        # secondary dataset to run on (e.g. AODSIM)
+        self.options.register ('dataset2',
+                       None, # default value
+                       VarParsing.VarParsing.multiplicity.singleton, # singleton or list
+                       VarParsing.VarParsing.varType.string,          # string, int, or float
+                       "dataset2")
         self.options.register ('processId',
                        "", # default value
                        VarParsing.VarParsing.multiplicity.singleton, # singleton or list
@@ -268,22 +275,47 @@ class JobConfig(object):
                 import FWCore.PythonUtilities.LumiList as LumiList
                 process.source.lumisToProcess = LumiList.LumiList(filename = self.lumiMask).getVLuminosityBlockRange()
                 
+
+        #----------
+        def postProcessFiles(files):
+            flist = []
+            for f in files:
+                if len(f.split(":",1))>1:
+                    flist.append(str(f))
+                else:
+                    flist.append(str("%s%s" % (self.filePrepend,f)))
+            return flist
+        #----------
+
+        flist = postProcessFiles(files)
             
-        flist = []
-        for f in files:
-            if len(f.split(":",1))>1:
-                flist.append(str(f))
-            else:
-                flist.append(str("%s%s" % (self.filePrepend,f)))
+        #----------
+        # get files of secondary dataset (if specified)
+        #----------        
+
+        if self.dataset2 != None:
+            dummy,dummy,dummy,secflist,dummy = self.dataset2
+            secflist = postProcessFiles(secflist)
+        else:
+            secflist = None
+
+        #----------
+
         if len(flist) > 0:
             ## fwlite
             if isFwlite:
                 ## process.fwliteInput.fileNames.extend([ str("%s%s" % (self.filePrepend,f)) for f in  files])
                 process.fwliteInput.fileNames = flist
+
+                # not sure if a secondary list of input files is supported for fwlite ?
+
             ## full framework
             else:
                 ## process.source.fileNames.extend([ str("%s%s" % (self.filePrepend,f)) for f in  files])
                 process.source.fileNames = flist
+
+                if secflist != None:
+                    process.source.secondaryFileNames = cms.untracked.vstring(secflist)
  
         ## fwlite
         if isFwlite:
@@ -332,20 +364,31 @@ class JobConfig(object):
             
         dataset = None
         if self.dataset != "":
-            print "Reading dataset (%s) %s" % ( self.campaign, self.dataset)
-            if self.dryRun and self.getMaxJobs:
-                dataset = SamplesManager("$CMSSW_BASE/src/%s/MetaData/data/%s/datasets.json" % (self.metaDataSrc, self.campaign),
-                                         self.crossSections,
-                                         ).getDatasetMetaData(self.maxEvents,self.dataset,jobId=-1,nJobs=self.nJobs)
-            else:
-                dataset = SamplesManager("$CMSSW_BASE/src/%s/MetaData/data/%s/datasets.json" % (self.metaDataSrc, self.campaign),
-                                         self.crossSections,
-                                         ).getDatasetMetaData(self.maxEvents,self.dataset,jobId=self.jobId,nJobs=self.nJobs)
-            if not dataset:
-                print "Could not find dataset %s in campaing %s/%s" % (self.dataset,self.metaDataSrc,self.campaing)
-                sys.exit(-1)
+            theDatasets = []
+            for dsname in [ self.dataset, self.dataset2 ]:
+
+                if dsname == None:
+                    # not specified
+                    theDatasets.append(None)
+                    continue
+
+                print "Reading dataset (%s) %s" % ( self.campaign, dsname)
+                if self.dryRun and self.getMaxJobs:
+                    dataset = SamplesManager("$CMSSW_BASE/src/%s/MetaData/data/%s/datasets.json" % (self.metaDataSrc, self.campaign),
+                                             self.crossSections,
+                                             ).getDatasetMetaData(self.maxEvents,dsname,jobId=-1,nJobs=self.nJobs)
+                else:
+                    dataset = SamplesManager("$CMSSW_BASE/src/%s/MetaData/data/%s/datasets.json" % (self.metaDataSrc, self.campaign),
+                                             self.crossSections,
+                                             ).getDatasetMetaData(self.maxEvents,dsname,jobId=self.jobId,nJobs=self.nJobs)
+                if not dataset:
+                    print "Could not find dataset %s in campaing %s/%s" % (dataset,self.metaDataSrc,self.campaing)
+                    sys.exit(-1)
                 
-        self.dataset = dataset
+                theDatasets.append(dataset)
+
+        self.dataset, self.dataset2 = theDatasets
+
         # auto-detect data from xsec = 0
         if self.dataset:
             name,xsec,totEvents,files,maxEvents = self.dataset            
