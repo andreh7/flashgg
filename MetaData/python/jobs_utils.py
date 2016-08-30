@@ -112,7 +112,7 @@ class JobsManager(object):
                             help="resubmit unfinished jobs upon continue."
                             ),
                 make_option("-b","--batch-system",dest="batchSystem",type="string",
-                            default="auto",help="Batch system name. Currently supported: sge lsf, default: %default"
+                            default="auto",help="Batch system name. Currently supported: sge lsf local, default: %default"
                             ),
                 make_option("--no-copy-proxy",dest="copy_proxy",action="store_false",
                             default=True,help="Do not try to copy the grid proxy to the worker nodes."

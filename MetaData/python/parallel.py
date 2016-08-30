@@ -31,6 +31,7 @@ class BatchRegistry:
         if batchSystem == "lsf" : return LsfJob
         elif batchSystem == "sge": return SGEJob
         elif batchSystem == "iclust": return IclustJob
+        elif batchSystem == "local" : return LocalJob
         else:
             raise Exception,"Unrecognized batchSystem: %s" % batchSystem
 
@@ -206,6 +207,139 @@ class LsfJob(object):
     def handleOutput(self):
         ## print "handleOutput"
         if self.async:
+            self.exitStatus = -1
+            result = commands.getstatusoutput("bjobs %s" % str(self.jobid))
+
+            for line in result[1].split("\n"):
+                if line.startswith(str(self.jobid)):
+                    exitStatus = [ l for l in line.split(" ") if l != "" ][2]
+                    if exitStatus == "DONE":
+                        self.exitStatus = 0
+                    else:
+                        self.exitStatus = -1
+                    break
+            
+        output = ""
+        if self.jobName:
+            try:
+                with open("%s.log" % self.jobName) as lf:
+                    output = lf.read()
+                    lf.close()
+                    output += "%s.log\n" % self.jobName
+            except:
+                output = "%s.log" % self.jobName
+        
+        return self.exitStatus, output
+
+        
+# -----------------------------------------------------------------------------------------------------
+class LocalJob(object):
+    """ a thread to run a command directly on the local shell, without the use of any batch 
+    system (useful for testing) """
+
+    #----------------------------------------
+    def __init__(self, jobName="", async=False, replacesJob=None):
+        """ @param cmd is the command to be executed. Some CMSSW specific wrapper
+            code will be added
+        """
+        
+        # DEBUG
+        async = True
+
+        self.jobName = jobName
+        self.async = async
+        self.jobid = None
+        self.cmd = None
+        self.replacesJob = replacesJob
+        
+    def __str__(self):
+        return "localJob: [%s] [%s]" % ( self.jobName, self.jobid )
+        
+    def setJobId(self,jobid):
+        self.jobid = jobid
+    #----------------------------------------
+    def preamble(self):
+        return ""
+
+    #----------------------------------------
+    def epilogue(self,cmd,dest):
+        return ""
+
+    def copyProxy(self):
+        return False
+
+    #----------------------------------------
+    def run(self,script):
+
+        # TODO: add support for running asynchronously
+        #       (multiple jobs in parallel, limiting
+        #        the total number of jobs which are
+        #        running in parallel ?)
+
+        scriptName = "%s.sh" % self.jobName
+
+        with open(scriptName,"w+") as fout:
+            fout.write(script)
+            fout.close()        
+        
+
+        cmdParts = [ scriptName ]
+        
+        if( self.jobName ):
+            logdir = os.path.dirname(self.jobName)
+            if not os.path.exists(logdir):
+                os.mkdir(logdir)
+            cmdParts.append("> %s.log 2>&1" % self.jobName)
+        
+        cmd = " ".join(cmdParts)
+
+        import subprocess
+        subproc = subprocess.Popen(cmd, shell=True, # bufsize=bufsize,
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               close_fds=True)
+        
+        out,err = subproc.communicate(script)
+        
+        # wait for the job to complete
+        ## self.exitStatus = lsf.wait()
+        self.exitStatus = subproc.returncode
+        
+        if self.exitStatus != 0:
+            print "error running job",self.jobName, self.exitStatus
+            print out
+            print err
+        else:
+            self.jobid = None
+            # for line in out.split("\n"):
+            #     if line.startswith("Job <"):
+            #         self.jobid = int(line.split("<",1)[1].split(">",1)[0])
+            #         break
+            
+        if self.async:
+            return self.exitStatus, (out,(self.jobName,self.jobid))
+
+        return self.handleOutput()
+
+    #----------------------------------------
+    def __call__(self,cmd):
+        
+        self.cmd = cmd
+        script = ""
+        script += "#!/bin/bash\n"
+        
+        # the user command
+        script += cmd+"\n"
+        
+        return self.run(script)
+        
+    
+    #----------------------------------------
+    def handleOutput(self):
+        ## print "handleOutput"
+        if self.async:
+            raise Exception("asynchronous running is currently not supported")
             self.exitStatus = -1
             result = commands.getstatusoutput("bjobs %s" % str(self.jobid))
 
