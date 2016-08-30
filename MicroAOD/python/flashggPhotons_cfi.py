@@ -31,4 +31,9 @@ flashggPhotons = cms.EDProducer('FlashggPhotonProducer',
 				elecTag = cms.InputTag("slimmedElectrons"),
 
 				embedRecHits = cms.bool(True),
+                                recHitWindowIeta = cms.uint32(35),
+                                recHitWindowIphi = cms.uint32(35),
+                                recHitWindowIx   = cms.uint32(35),
+                                recHitWindowIy   = cms.uint32(35),
+
                               )
