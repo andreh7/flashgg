@@ -34,6 +34,8 @@
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 
+#include "flashgg/TorchUtils/interface/TorchWriter.h"
+
 
 using namespace std;
 using namespace edm;
@@ -41,133 +43,6 @@ using namespace edm;
 // **********************************************************************
 
 namespace flashgg {
-
-    const unsigned MAGIC_NUMBER = 1;
-    const unsigned MAGIC_STRING = 2;
-    const unsigned MAGIC_TABLE  = 3;
-    const unsigned MAGIC_TORCH  = 4;
-
-    template<typename DataType>
-    inline void writeType(std::ostream &os, const DataType &value)
-    {
-        os.write((const char*) &value, sizeof(value));
-    }
-
-    inline void writeInt(std::ostream &os, int32_t value)
-    {
-        os.write((const char*) &value, sizeof(value));
-    }
-
-    /** assumes that double is 8 bytes */
-    inline void writeDouble(std::ostream &os, double value)
-    {
-        os.write((const char*) &value, sizeof(value));
-    }
-
-    inline void writeLong(std::ostream &os, int64_t value)
-    {
-        os.write((const char*)&value, sizeof(value));
-    }
-
-    inline void writeFloat(std::ostream &os, float value)
-    {
-        os.write((const char*)&value, sizeof(value));
-    }
-
-
-    inline void writeString(std::ostream &os, const std::string &str)
-    {
-        size_t len = str.size();
-        writeInt(os, len);
-
-        os.write((const char*) &str[0], len);
-    }
-
-    template<typename DataType>
-    void writeTypeTensorHelper(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<DataType> &data, const std::string &tensorTypeName,
-                         const std::string &storageTypeName)
-    {
-        // data must be stored in the order such the an increase of the index in the last dimension
-        // by one corresponds to an indcreas of the index into data by one etc.
-
-        writeInt(os, MAGIC_TORCH);
-
-        // write object index (we do NOT reuse objects here, we assume that we only write one
-        // object per file)
-        writeInt(os, objectIndex++);
-
-        // version string
-        writeString(os, "V 1");
-
-        // class name
-        writeString(os, tensorTypeName);
-
-        //----------
-
-        // write the number of coordinates
-        writeInt(os, sizes.size());
-
-        // write the sizes of each dimension
-        for (unsigned dimsize : sizes)
-            writeLong(os, dimsize);
-
-        // calculate strides
-        std::vector<uint64_t> strides(sizes.size());
-        {
-            uint64_t product = 1;
-            for (unsigned i = sizes.size(); i > 0; --i)
-                {
-                    strides[i-1] = product;
-                    product *= sizes[i-1];
-                }
-
-            assert(product == data.size());
-        }
-        for (uint64_t stride : strides)
-            writeLong(os, stride);
-
-        // write storage offset
-        writeLong(os, 1);
-
-        //----------
-        // write the FloatStorage object: the actual data
-        //----------
-        writeInt(os, MAGIC_TORCH);
-
-        // write object index (we do NOT reuse objects here, we assume that we only write one
-        // object per file)
-        writeInt(os, objectIndex++);
-
-        // version string
-        writeString(os, "V 1");
-
-        // class name
-        writeString(os, storageTypeName);
-
-        // size
-        writeLong(os, data.size());
-
-        // the actual content
-        for (unsigned i = 0 ; i < data.size(); ++i)
-            writeType<DataType>(os, data[i]);
-
-    }
-
-    template<typename DataType>
-    void writeTypeTensor(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<DataType> &data);
-
-    // template specializations
-    template<>
-    inline void writeTypeTensor<float>(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<float> &data) 
-    {
-        writeTypeTensorHelper<float>(os, objectIndex, sizes, data, "torch.FloatTensor", "torch.FloatStorage");
-    }
-
-    template<>
-    inline void writeTypeTensor<int32_t>(std::ostream &os, unsigned &objectIndex, const std::vector<unsigned> &sizes, const std::vector<int32_t> &data) 
-    {
-        writeTypeTensorHelper<int32_t>(os, objectIndex, sizes, data, "torch.IntTensor", "torch.IntStorage");
-    }
 
     //----------------------------------------------------------------------
 
@@ -356,7 +231,7 @@ namespace flashgg {
             }
         }
 
-        void writeRecHits(std::ostream &os, unsigned &objectIndex, const std::vector<std::vector<RecHitData> > &rechits, 
+        void writeRecHits(TorchWriter &tw, const std::vector<std::vector<RecHitData> > &rechits, 
                           int windowHalfWidth, int windowHalfHeight)
         {
             std::vector<unsigned> sizes;
@@ -379,12 +254,12 @@ namespace flashgg {
 
             } // loop over events
 
-            writeTypeTensor(os, objectIndex, sizes, data);
+            tw.writeTypeTensor(sizes, data);
         }
 
         /** function to write out one element of each rechit as a table of tables */
         template<typename DataType, typename Func>
-        void writeRecHitsValues(std::ostream &os, unsigned &objectIndex, 
+        void writeRecHitsValues(TorchWriter &tw, 
                                 const std::vector<std::vector<RecHitData> > &rechits,
                                 unsigned totNumRecHits, 
                                 Func&& valueFunc)
@@ -402,7 +277,7 @@ namespace flashgg {
             cout << "nextPos=" << nextPos << " totNumRecHits=" << totNumRecHits << endl;
             assert(nextPos == totNumRecHits);
 
-            writeTypeVector<DataType>(os, objectIndex, values);
+            tw.writeTypeVector<DataType>(values);
         }
                                 
 
@@ -417,13 +292,13 @@ namespace flashgg {
                            tensor the index of the photon)
               numRecHits : number of rechits for the given photon
         */
-        void writeRecHitsSparse(std::ostream &os, unsigned &objectIndex, const std::vector<std::vector<RecHitData> > &rechits)
+        void writeRecHitsSparse(TorchWriter &tw, const std::vector<std::vector<RecHitData> > &rechits)
         {
             const unsigned tableSize = 5;
 
-            writeInt(os, MAGIC_TABLE);
-            writeInt(os, objectIndex++);
-            writeInt(os, tableSize);
+            tw.writeInt(tw.MAGIC_TABLE);
+            tw.writeInt(tw.getNextObjectIndex());
+            tw.writeInt(tableSize);
 
             std::vector<int32_t> firstIndex(rechits.size()), numRecHits(rechits.size());
             unsigned nextStartIndex = 1;
@@ -439,26 +314,17 @@ namespace flashgg {
             
             unsigned totNumRecHits = nextStartIndex - 1;
             
-            writeInt(os, MAGIC_STRING); writeString(os, "firstIndex");  writeTypeVector(os, objectIndex, firstIndex);
-            writeInt(os, MAGIC_STRING); writeString(os, "numRecHits");  writeTypeVector(os, objectIndex, numRecHits);
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("firstIndex");  tw.writeTypeVector(firstIndex);
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("numRecHits");  tw.writeTypeVector(numRecHits);
 
             // we add one to the x and y indices to stick to torch's one based indexing
             // (note that in the dense writing routine this is not needed because
             // we calculate the address directly)
-            writeInt(os, MAGIC_STRING); writeString(os, "energy");  writeRecHitsValues<float>(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.energy; });
-            writeInt(os, MAGIC_STRING); writeString(os, "x");       writeRecHitsValues<int32_t>(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dx + 1; });
-            writeInt(os, MAGIC_STRING); writeString(os, "y");       writeRecHitsValues<int32_t>(os, objectIndex, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dy + 1; });
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("energy");  writeRecHitsValues<float>(tw, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.energy; });
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("x");       writeRecHitsValues<int32_t>(tw, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dx + 1; });
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("y");       writeRecHitsValues<int32_t>(tw, rechits, totNumRecHits, [](const RecHitData &rh)  { return rh.dy + 1; });
         }
 
-
-        template<typename DataType>
-        void writeTypeVector(std::ostream &os, unsigned &objectIndex, const std::vector<DataType> &data)
-        {
-            std::vector<unsigned> sizes;
-            sizes.push_back(data.size());
-
-            writeTypeTensor<DataType>(os, objectIndex, sizes, data);
-        }
 
         void writeTorchData()
         {
@@ -476,49 +342,49 @@ namespace flashgg {
                 tableSize += 1;
 
             std::ofstream os(outputFname.c_str());
+            TorchWriter tw(os);
 
-            writeInt(os, MAGIC_TABLE);
+            tw.writeInt(tw.MAGIC_TABLE);
 
-            unsigned objectIndex = 1;
-            writeInt(os, objectIndex++);
+            tw.writeInt(tw.getNextObjectIndex());
             
-            writeInt(os, tableSize);
+            tw.writeInt(tableSize);
 
-            writeInt(os, MAGIC_STRING); writeString(os, "X");      
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("X");
             if (writeRecHitsSparseFlag)
-                writeRecHitsSparse(os, objectIndex, recHits);
+                writeRecHitsSparse(tw, recHits);
             else
-                writeRecHits(os, objectIndex, recHits, windowHalfWidth, windowHalfHeight);
+                writeRecHits(tw, recHits, windowHalfWidth, windowHalfHeight);
 
-            writeInt(os, MAGIC_STRING); writeString(os, "y");      writeTypeVector(os, objectIndex, labels);
-            writeInt(os, MAGIC_STRING); writeString(os, "weight"); writeTypeVector(os, objectIndex, weights);
-            writeInt(os, MAGIC_STRING); writeString(os, "mvaid");  writeTypeVector(os, objectIndex, mvaID);
-            writeInt(os, MAGIC_STRING); writeString(os, "genDR");  writeTypeVector(os, objectIndex, genDeltaR);
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("y");      tw.writeTypeVector(labels);
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("weight"); tw.writeTypeVector(weights);
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("mvaid");  tw.writeTypeVector(mvaID);
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("genDR");  tw.writeTypeVector(genDeltaR);
 
-            writeInt(os, MAGIC_STRING); writeString(os, "chgIsoWrtChosenVtx");  writeTypeVector(os, objectIndex, chgIsoWrtChosenVtx);
-            writeInt(os, MAGIC_STRING); writeString(os, "chgIsoWrtWorstVtx");   writeTypeVector(os, objectIndex, chgIsoWrtWorstVtx);
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("chgIsoWrtChosenVtx");  tw.writeTypeVector(chgIsoWrtChosenVtx);
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("chgIsoWrtWorstVtx");   tw.writeTypeVector(chgIsoWrtWorstVtx);
 
             if (writePhotonIdInputVarsFlag)
                 {
-                    writeInt(os, MAGIC_STRING); writeString(os, "phoIdInput");      
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("phoIdInput");      
 
-                    writeInt(os, MAGIC_TABLE);
-                    writeInt(os, objectIndex++);
-                    writeInt(os, 13); // number of input variables
+                    tw.writeInt(tw.MAGIC_TABLE);
+                    tw.writeInt(tw.getNextObjectIndex());
+                    tw.writeInt(13); // number of input variables
 
-                    writeInt(os, MAGIC_STRING); writeString(os, "scRawE"          );  writeTypeVector(os, objectIndex, scRawE          );
-                    writeInt(os, MAGIC_STRING); writeString(os, "r9"              );  writeTypeVector(os, objectIndex, r9              );
-                    writeInt(os, MAGIC_STRING); writeString(os, "covIEtaIEta"     );  writeTypeVector(os, objectIndex, covIEtaIEta     );
-                    writeInt(os, MAGIC_STRING); writeString(os, "phiWidth"        );  writeTypeVector(os, objectIndex, phiWidth        );
-                    writeInt(os, MAGIC_STRING); writeString(os, "etaWidth"        );  writeTypeVector(os, objectIndex, etaWidth        );
-                    writeInt(os, MAGIC_STRING); writeString(os, "covIEtaIPhi"     );  writeTypeVector(os, objectIndex, covIEtaIPhi     );
-                    writeInt(os, MAGIC_STRING); writeString(os, "s4"              );  writeTypeVector(os, objectIndex, s4              );
-                    writeInt(os, MAGIC_STRING); writeString(os, "pfPhoIso03"      );  writeTypeVector(os, objectIndex, pfPhoIso03      );
-                    writeInt(os, MAGIC_STRING); writeString(os, "pfChgIso03"      );  writeTypeVector(os, objectIndex, pfChgIso03      );
-                    writeInt(os, MAGIC_STRING); writeString(os, "pfChgIso03worst" );  writeTypeVector(os, objectIndex, pfChgIso03worst );
-                    writeInt(os, MAGIC_STRING); writeString(os, "scEta"           );  writeTypeVector(os, objectIndex, scEta           );
-                    writeInt(os, MAGIC_STRING); writeString(os, "rho"             );  writeTypeVector(os, objectIndex, rho             );
-                    writeInt(os, MAGIC_STRING); writeString(os, "esEffSigmaRR"    );  writeTypeVector(os, objectIndex, esEffSigmaRR    );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("scRawE"          );  tw.writeTypeVector(scRawE          );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("r9"              );  tw.writeTypeVector(r9              );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("covIEtaIEta"     );  tw.writeTypeVector(covIEtaIEta     );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("phiWidth"        );  tw.writeTypeVector(phiWidth        );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("etaWidth"        );  tw.writeTypeVector(etaWidth        );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("covIEtaIPhi"     );  tw.writeTypeVector(covIEtaIPhi     );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("s4"              );  tw.writeTypeVector(s4              );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("pfPhoIso03"      );  tw.writeTypeVector(pfPhoIso03      );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("pfChgIso03"      );  tw.writeTypeVector(pfChgIso03      );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("pfChgIso03worst" );  tw.writeTypeVector(pfChgIso03worst );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("scEta"           );  tw.writeTypeVector(scEta           );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("rho"             );  tw.writeTypeVector(rho             );
+                    tw.writeInt(tw.MAGIC_STRING); tw.writeString("esEffSigmaRR"    );  tw.writeTypeVector(esEffSigmaRR    );
                 }
         }
 
