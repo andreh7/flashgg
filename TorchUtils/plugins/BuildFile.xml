@@ -8,6 +8,9 @@
 <use   name="PhysicsTools/UtilAlgos"/>
 <use   name="roofit"/>
 <use   name="roottmva"/>
+
+<use   name="flashgg/TorchUtils"/>
+
 <!-- Flags CXXFLAGS="-ggdb"/ -->
 <flags   EDM_PLUGIN="1"/>
 </library>
