@@ -35,6 +35,7 @@
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 
 #include "flashgg/TorchUtils/interface/TorchWriter.h"
+#include "flashgg/TorchUtils/interface/TrackWriter.h"
 
 
 using namespace std;
@@ -117,6 +118,8 @@ namespace flashgg {
 
         /** boundary between barrel and endcap */
         const float etaMaxBarrel = 1.5;
+
+        TrackWriter trackWriter;
 
         //----------------------------------------
 
@@ -228,6 +231,10 @@ namespace flashgg {
                         rho             .push_back( phoIdInputVars->rho             );
                         esEffSigmaRR    .push_back( phoIdInputVars->esEffSigmaRR    );
                     }
+
+                // tracks
+                trackWriter.addPhoton(photon);
+                
             }
         }
 
@@ -340,6 +347,9 @@ namespace flashgg {
             if (writePhotonIdInputVarsFlag)
                 // add sub-recrod with photon id input variables
                 tableSize += 1;
+            
+            // for writing out tracks
+            tableSize += 1;
 
             std::ofstream os(outputFname.c_str());
             TorchWriter tw(os);
@@ -386,6 +396,10 @@ namespace flashgg {
                     tw.writeInt(tw.MAGIC_STRING); tw.writeString("rho"             );  tw.writeTypeVector(rho             );
                     tw.writeInt(tw.MAGIC_STRING); tw.writeString("esEffSigmaRR"    );  tw.writeTypeVector(esEffSigmaRR    );
                 }
+
+
+            tw.writeInt(tw.MAGIC_STRING); tw.writeString("tracks");      
+            trackWriter.writeOut(tw);
         }
 
     };
@@ -401,7 +415,10 @@ namespace flashgg {
         windowHalfWidth( iConfig.getUntrackedParameter<unsigned>("windowHalfWidth")),
         windowHalfHeight( iConfig.getUntrackedParameter<unsigned>("windowHalfHeight")),
 
-        writePhotonIdInputVarsFlag ( iConfig.getUntrackedParameter<bool>("writePhotonIdInputVars"))
+        writePhotonIdInputVarsFlag ( iConfig.getUntrackedParameter<bool>("writePhotonIdInputVars")),
+
+        trackWriter(iConfig, consumesCollector())
+
     {
         if (writePhotonIdInputVarsFlag)
         {
@@ -425,6 +442,8 @@ namespace flashgg {
 
         if (writePhotonIdInputVarsFlag)
             iEvent.getByToken(phoIdInputVarsToken, phoIdInputVarsHandle);
+
+        trackWriter.newEvent(iEvent);
 
         //----------------------------------------
 
