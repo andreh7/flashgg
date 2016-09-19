@@ -154,7 +154,8 @@ class JobsManager(object):
             
         self.uniqueNames = {}
 
-        self.checkCrossSections()
+        if not self.options.summary and not self.options.cont:
+            self.checkCrossSections()
 
         if self.options.additionalDatasetSuffix != None:
             # remove any leading and trailing slashes
