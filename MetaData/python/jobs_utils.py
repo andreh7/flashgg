@@ -131,6 +131,10 @@ class JobsManager(object):
         (self.options, self.args) = parser.parse_args()
         self.maxResub = self.options.maxResub
 
+        if (self.options.summary or self.options.cont) and self.options.outputDir == None:
+            print "need to specify an output directory with -d or --outputDir when using --summary or --cont/-C"
+            sys.exit(1)
+
         if self.options.cmdLine:
             self.args = self.args+shell_args(str(self.options.cmdLine))
         
