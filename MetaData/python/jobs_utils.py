@@ -135,6 +135,15 @@ class JobsManager(object):
             print "need to specify an output directory with -d or --outputDir when using --summary or --cont/-C"
             sys.exit(1)
 
+        #----------
+        # read original stageTo from job config if we refer to existing
+        # jobs and no stage destination was specified on the command line
+        #----------
+        if (self.options.summary or self.options.cont) and not self.options.stageTo:
+            with open("%s/config.json" % (self.options.outputDir), "r" ) as cfin:
+                the_config = json.loads(cfin.read())
+                self.options.stageTo = the_config['stageTo']
+
         if self.options.cmdLine:
             self.args = self.args+shell_args(str(self.options.cmdLine))
         
