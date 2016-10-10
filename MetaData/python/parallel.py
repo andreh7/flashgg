@@ -83,7 +83,11 @@ class BatchRegistry:
 
     #----------------------------------------
     @staticmethod
-    def getProxy():
+    def getProxy(isLsf):
+        # @param isLsf : if true, uses '${LSB_SUB_HOST}' as host to copy the proxy from
+        #                instead of the concrete hostname of the submission host.
+        #                This allows to resubmit failed jobs from another host if necessary.
+
         if not BatchRegistry.proxy:
             stat,out = commands.getstatusoutput("voms-proxy-info -e --valid 5:00")
             if stat:
@@ -92,7 +96,13 @@ class BatchRegistry:
             out = out.strip().split("\n")[-1] # remove spurious java info at ic.ac.uk
             if stat:
                 raise Exception,"Unable to voms proxy:\n%s" % out
-            BatchRegistry.proxy = "%s:%s" % ( BatchRegistry.getHost(), out.strip("\n") )
+
+            if isLsf:
+                host = '${LSB_SUB_HOST}'
+            else:
+                host = BatchRegistry.getHost()
+
+            BatchRegistry.proxy = "%s:%s" % ( host, out.strip("\n") )
         return BatchRegistry.proxy
     
         
@@ -281,9 +291,11 @@ class WorkNodeJob(object):
         script += self.runner.preamble()+"\n"
         
         # copy grid proxy over
+        isLsf = isinstance(self.runner, LsfJob)
+
         if self.copy_proxy and self.runner.copyProxy():
             try:
-                proxy = BatchRegistry.getProxy()
+                proxy = BatchRegistry.getProxy(isLsf)
                 script += "scp -o StrictHostKeyChecking=no -p %s .\n" % proxy
                 proxyname = os.path.basename(proxy.split(":")[1])
                 script += "export X509_USER_PROXY=$PWD/%s\n" % proxyname
@@ -302,7 +314,7 @@ class WorkNodeJob(object):
                     print e
         else:
             try:
-                proxy = BatchRegistry.getProxy()
+                proxy = BatchRegistry.getProxy(isLsf)
                 proxyname = proxy.split(":")[1]
                 script += "export X509_USER_PROXY=%s\n" % proxyname
                 if WorkNodeJob.nwarnings > 0:
