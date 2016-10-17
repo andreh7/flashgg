@@ -180,7 +180,9 @@ namespace flashgg {
         /** called to check if a photon is in barrel/endcap */
         virtual bool isPhotonInSubdet(const flashgg::Photon &photon) = 0;
 
-        void addPhoton(const flashgg::Photon &photon, float weight, float mvaID,
+        void addPhoton(const flashgg::Photon &photon, 
+                       const edm::Ptr<reco::Vertex> &photonVertex,
+                       float weight, float mvaID,
                        float chosenVertexChargedIso,
                        float worstVertexChargedIso,
                        const PhoIdMVAInputVars *phoIdInputVars
@@ -233,7 +235,7 @@ namespace flashgg {
                     }
 
                 // tracks
-                trackWriter.addPhoton(photon);
+                trackWriter.addPhoton(photon, photonVertex);
                 
             }
         }
@@ -470,13 +472,17 @@ namespace flashgg {
                     phoIdInputVarsSubLeading = &(diphoInputVars->getInputsSubLeading());
                 }
 
-            addPhoton(*diphoton->leadingPhoton(), weight, 
+            addPhoton(*diphoton->leadingPhoton(), 
+                      diphoton->vtx(),
+                      weight, 
                       diphoton->leadingView()->phoIdMvaWrtChosenVtx(),
                       diphoton->leadingView()->pfChIso03WrtChosenVtx(),
                       diphoton->leadingPhoton()->pfChgIsoWrtWorstVtx04(),
                       phoIdInputVarsLeading
                       );
-            addPhoton(*diphoton->subLeadingPhoton(), weight, 
+            addPhoton(*diphoton->subLeadingPhoton(), 
+                      diphoton->vtx(), 
+                      weight, 
                       diphoton->subLeadingView()->phoIdMvaWrtChosenVtx(),
                       diphoton->subLeadingView()->pfChIso03WrtChosenVtx(),
                       diphoton->subLeadingPhoton()->pfChgIsoWrtWorstVtx04(),

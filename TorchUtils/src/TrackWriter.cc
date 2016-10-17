@@ -21,7 +21,7 @@ namespace flashgg
     this->event = &event;
   }
   //----------------------------------------------------------------------
-  void TrackWriter::addPhoton(const flashgg::Photon &photon)
+  void TrackWriter::addPhoton(const flashgg::Photon &photon, const edm::Ptr<reco::Vertex> &photonVertex)
   {
     edm::Handle<edm::View<pat::PackedCandidate> > patCandidates;
     this->event->getByToken(packedCandidatesToken, patCandidates);
@@ -35,6 +35,9 @@ namespace flashgg
 
     vector<float> relpt, detaAtVertex, dphiAtVertex;
     vector<int> charge;
+
+    /** dz(track vertex - photon vertex) */
+    vector<float> vtxDz;
 
     // see https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/DataFormats/PatCandidates/interface/PackedCandidate.h
     // for PackedCandidate
@@ -55,6 +58,11 @@ namespace flashgg
 	double deta = track->eta() - photonEta;
 	double dr2 = dphi * dphi + deta * deta; 
 
+	// photonVertex.id() and cand.vertexRef().id() seem to be the same all the time but 
+	// the vertex locations are not -> decide by dz
+	// (we actually store the dz into the output file
+	// so we can decide later on whether this is the same vertex or not)
+
 	if (dr2 < maxDeltaR * maxDeltaR)
         {
 	  // keep this track for this photon
@@ -62,7 +70,11 @@ namespace flashgg
 	  detaAtVertex.push_back(deta);
 	  dphiAtVertex.push_back(dphi);
 	  charge.push_back(track->charge());
+
+	  // track minus photon vertex
+	  vtxDz.push_back(cand.vertexRef()->z() - photonVertex->z());
         }
+
       } // loop over tracks of this event
 
     // add this photon
@@ -70,6 +82,7 @@ namespace flashgg
     this->detaAtVertex.push_back(detaAtVertex);
     this->dphiAtVertex.push_back(dphiAtVertex);
     this->charge.push_back(charge);
+    this->vtxDz.push_back(vtxDz);
 
   }
 
@@ -125,7 +138,7 @@ namespace flashgg
     int32_t totNumTracks = nextStartIndex - 1;
 
     // number of tensors to write out
-    const unsigned tableSize = 6;
+    const unsigned tableSize = 7;
 
     tw.writeInt(tw.MAGIC_TABLE);
     tw.writeInt(tw.getNextObjectIndex());
@@ -139,6 +152,7 @@ namespace flashgg
     tw.writeInt(tw.MAGIC_STRING); tw.writeString("detaAtVertex"); writeFlattenedVector(tw,detaAtVertex, totNumTracks);
     tw.writeInt(tw.MAGIC_STRING); tw.writeString("dphiAtVertex"); writeFlattenedVector(tw,dphiAtVertex, totNumTracks);
     tw.writeInt(tw.MAGIC_STRING); tw.writeString("charge"      ); writeFlattenedVector(tw,charge, totNumTracks);
+    tw.writeInt(tw.MAGIC_STRING); tw.writeString("vtxDz"       ); writeFlattenedVector(tw,vtxDz,  totNumTracks);
   }
 
   //----------------------------------------------------------------------
