@@ -34,7 +34,19 @@ namespace flashgg {
             and MET or -1 if there is no lepton */
         double transverseMass() const;
 
+        /** checks if there are two same flavour opposite sign leptons and returns
+            their mass or -1 if there isn't any */
+        static double zcandMass(const std::vector<edm::Ptr<flashgg::Electron> > &electrons,
+                                const std::vector<edm::Ptr<Muon> > &muons);
+
+
+        double zcandMass() const;
+
         DiPhotonTagBase::tag_t tagEnum() const override {return DiPhotonTagBase::kZHLeptonic; }
+    private:
+        /** @param massDiffToZ will be set to the difference of the found lepton mass w.r.t to the 
+            nominal Z mass */
+        static double zcandMassHelper(const std::vector<const reco::Candidate*> &leptons, double &massDiffToZ);
 
     private:
         std::vector<edm::Ptr<Muon> > Muons_;

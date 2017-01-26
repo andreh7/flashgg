@@ -1,5 +1,6 @@
 #include "flashgg/DataFormats/interface/VHLeptonicLooseTag.h"
 #include "flashgg/DataFormats/interface/WHLeptonicTag.h"
+#include "flashgg/DataFormats/interface/ZHLeptonicTag.h"
 #include <algorithm>
 
 using namespace flashgg;
@@ -16,6 +17,7 @@ VHLeptonicLooseTag::VHLeptonicLooseTag( edm::Ptr<DiPhotonCandidate> dipho, DiPho
 
 double VHLeptonicLooseTag::transverseMass() const { return WHLeptonicTag::transverseMass(met(), electrons(), muons()); }
 
+double VHLeptonicLooseTag::zcandMass() const { return ZHLeptonicTag::zcandMass(electrons(), muons()); }
 
 
 // Local Variables:

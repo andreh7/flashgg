@@ -1,4 +1,5 @@
 #include "flashgg/DataFormats/interface/WHLeptonicTag.h"
+#include "flashgg/DataFormats/interface/ZHLeptonicTag.h"
 #include <algorithm>
 
 #include "DataFormats/Math/interface/LorentzVector.h"
@@ -71,6 +72,8 @@ WHLeptonicTag::transverseMass(const edm::Ptr<flashgg::Met> &met,
 
     return sqrt(max(0., mt2));
 }
+
+double WHLeptonicTag::zcandMass() const { return ZHLeptonicTag::zcandMass(electrons(), muons()); }
 
 
 // Local Variables:

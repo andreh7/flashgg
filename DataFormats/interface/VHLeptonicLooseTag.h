@@ -36,6 +36,8 @@ namespace flashgg {
             and MET or -1 if there is no lepton */
         double transverseMass() const;
 
+        double zcandMass() const;
+
     private:
         std::vector<edm::Ptr<Muon> > Muons_;
         std::vector<edm::Ptr<Electron> > Electrons_;
