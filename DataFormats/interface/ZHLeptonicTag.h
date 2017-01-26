@@ -30,6 +30,10 @@ namespace flashgg {
         void setMET( edm::Ptr<flashgg::Met> MET ) {MET_ = MET;}
         void setElectrons( std::vector<edm::Ptr<Electron> > Electrons ) {Electrons_ = Electrons;}
 
+        /** @return the transverse mass calculated from the highest pt lepton 
+            and MET or -1 if there is no lepton */
+        double transverseMass() const;
+
         DiPhotonTagBase::tag_t tagEnum() const override {return DiPhotonTagBase::kZHLeptonic; }
 
     private:

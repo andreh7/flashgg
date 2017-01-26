@@ -34,6 +34,15 @@ namespace flashgg {
 
         DiPhotonTagBase::tag_t tagEnum() const override {return DiPhotonTagBase::kWHLeptonic; }
 
+        /** @return the transverse mass calculated from the highest pt lepton 
+            and MET or -1 if there is no lepton */
+        double transverseMass() const;
+
+        /** static function doing the actual calculation which can also be
+            used from the related tag classes such as ZH */
+        static double transverseMass(const edm::Ptr<flashgg::Met> &met, 
+                                     const std::vector<edm::Ptr<flashgg::Electron> > &electrons,
+                                     const std::vector<edm::Ptr<Muon> > &muons);
     private:
         std::vector<edm::Ptr<Muon> > Muons_;
         std::vector<edm::Ptr<Electron> > Electrons_;
