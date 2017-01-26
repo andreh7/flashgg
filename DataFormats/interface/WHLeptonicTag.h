@@ -43,6 +43,9 @@ namespace flashgg {
         static double transverseMass(const edm::Ptr<flashgg::Met> &met, 
                                      const std::vector<edm::Ptr<flashgg::Electron> > &electrons,
                                      const std::vector<edm::Ptr<Muon> > &muons);
+
+        double zcandMass() const;
+
     private:
         std::vector<edm::Ptr<Muon> > Muons_;
         std::vector<edm::Ptr<Electron> > Electrons_;
