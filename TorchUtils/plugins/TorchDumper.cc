@@ -116,6 +116,13 @@ namespace flashgg {
             rho,
             esEffSigmaRR;
 
+        //----------
+        // other photon variables
+        //----------
+        std::vector<float> photonEt;
+
+        //----------
+
         /** boundary between barrel and endcap */
         const float etaMaxBarrel = 1.5;
 
@@ -233,6 +240,9 @@ namespace flashgg {
                         rho             .push_back( phoIdInputVars->rho             );
                         esEffSigmaRR    .push_back( phoIdInputVars->esEffSigmaRR    );
                     }
+
+                // other photon variables
+                photonEt.push_back(photon.et());
 
                 // tracks
                 trackWriter.addPhoton(photon, photonVertex);
@@ -353,6 +363,9 @@ namespace flashgg {
             // for writing out tracks
             tableSize += 1;
 
+            // for writing other photon variables
+            tableSize += 1;
+
             std::ofstream os(outputFname.c_str());
             TorchWriter tw(os);
 
@@ -398,6 +411,20 @@ namespace flashgg {
                     tw.writeInt(tw.MAGIC_STRING); tw.writeString("rho"             );  tw.writeTypeVector(rho             );
                     tw.writeInt(tw.MAGIC_STRING); tw.writeString("esEffSigmaRR"    );  tw.writeTypeVector(esEffSigmaRR    );
                 }
+
+            //----------
+            // other photon variables (e.g. Et for Et flattening)
+            //----------
+            {
+                tw.writeInt(tw.MAGIC_STRING); tw.writeString("phoVars");
+                tw.writeInt(tw.MAGIC_TABLE);
+                tw.writeInt(tw.getNextObjectIndex());
+                tw.writeInt(1); // number of variables
+
+                tw.writeInt(tw.MAGIC_STRING); tw.writeString("phoEt"          );  tw.writeTypeVector(photonEt);
+            }
+
+            //----------
 
 
             tw.writeInt(tw.MAGIC_STRING); tw.writeString("tracks");      
