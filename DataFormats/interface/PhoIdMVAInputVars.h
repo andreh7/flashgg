@@ -23,11 +23,13 @@ namespace flashgg {
         float covIEtaIPhi;
         float s4;
         float pfPhoIso03;
+        float pfPhoIso03Corr;
         float pfChgIso03;
         float pfChgIso03worst;
         float scEta;
         float rho;
         float esEffSigmaRR;
+        float esEnovSCRawEn;
     };
 
 }
