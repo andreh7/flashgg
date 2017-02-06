@@ -12,7 +12,7 @@ namespace flashgg {
         covIEtaIPhi    ( -9999. ),
         s4             ( -9999. ),
         pfPhoIso03     ( -9999. ),
-        pfPhoIso03Corr ( -9999. },
+        pfPhoIso03Corr ( -9999. ),
         pfChgIso03     ( -9999. ),
         pfChgIso03worst( -9999. ),
         scEta          ( -9999. ),
