@@ -59,6 +59,7 @@ namespace flashgg {
                                       float, float, float, float, float, float, float, reco::PFCandidate::ParticleType, const reco::Vertex *vtx = 0 );
 
 
+        void               setupMVA( const std::string &, const std::string &, bool );
         /** @param phoIdMVAInputVars if non-NULL, values of the MVA input variables will be copied there */
         float              computeMVAWrtVtx( flashgg::Photon &, const edm::Ptr<reco::Vertex> &, const double, const double etaWidth = 0, const double eA = 0, const std::vector<double> coeff = vector<double>(0,0),const double cut = 0, PhoIdMVAInputVars *phoIdMVAInputVars = NULL);
 
