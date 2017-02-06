@@ -47,11 +47,11 @@ namespace flashgg {
 
     //----------------------------------------------------------------------
 
-    class TorchDumper : public edm::EDAnalyzer
+    class PhoIdDumper : public edm::EDAnalyzer
     {
     public:
-        explicit TorchDumper( const edm::ParameterSet & );
-        virtual ~TorchDumper();
+        explicit PhoIdDumper( const edm::ParameterSet & );
+        virtual ~PhoIdDumper();
 
         static void fillDescriptions( edm::ConfigurationDescriptions &descriptions );
 
@@ -436,7 +436,7 @@ namespace flashgg {
 // ******************************************************************************************
 // ******************************************************************************************
 
-    TorchDumper::TorchDumper( const edm::ParameterSet &iConfig ):
+    PhoIdDumper::PhoIdDumper( const edm::ParameterSet &iConfig ):
         diphotonToken_( consumes<edm::View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "diphotonsInput" ) ) ),
 
         outputFname( iConfig.getUntrackedParameter<std::string>("output") ),
@@ -456,13 +456,13 @@ namespace flashgg {
 
     }
 
-    TorchDumper::~TorchDumper()
+    PhoIdDumper::~PhoIdDumper()
     {
 
     }
 
     void
-    TorchDumper::analyze( const edm::Event &iEvent, const edm::EventSetup &iSetup )
+    PhoIdDumper::analyze( const edm::Event &iEvent, const edm::EventSetup &iSetup )
     {
         Handle<edm::View<flashgg::DiPhotonCandidate> > diphotons;
         iEvent.getByToken( diphotonToken_, diphotons );
@@ -522,18 +522,18 @@ namespace flashgg {
     } // analyze
 
     void
-    TorchDumper::beginJob()
+    PhoIdDumper::beginJob()
     {
     }
 
     void
-    TorchDumper::endJob()
+    PhoIdDumper::endJob()
     {
         writeTorchData();
     }
 
     void
-    TorchDumper::fillDescriptions( edm::ConfigurationDescriptions &descriptions )
+    PhoIdDumper::fillDescriptions( edm::ConfigurationDescriptions &descriptions )
     {
         //The following says we do not know what parameters are allowed so do no validation
         // Please change this to state exactly what you do use, even if it is no parameters
@@ -545,12 +545,12 @@ namespace flashgg {
     //----------------------------------------------------------------------
 
     /** dumps endcap photons */
-    class TorchDumperBarrel : public TorchDumper
+    class PhoIdDumperBarrel : public PhoIdDumper
     {
         //----------------------------------------
     public:
-        explicit TorchDumperBarrel( const edm::ParameterSet &iParams) : 
-            TorchDumper(iParams)
+        explicit PhoIdDumperBarrel( const edm::ParameterSet &iParams) : 
+            PhoIdDumper(iParams)
         {
         }
 
@@ -611,13 +611,13 @@ namespace flashgg {
     //----------------------------------------------------------------------
 
     /** dumps barrel photons */
-    class TorchDumperEndcap : public TorchDumper
+    class PhoIdDumperEndcap : public PhoIdDumper
     {
         //----------------------------------------
     public:
 
-        explicit TorchDumperEndcap( const edm::ParameterSet &iParams) : 
-            TorchDumper(iParams)
+        explicit PhoIdDumperEndcap( const edm::ParameterSet &iParams) : 
+            PhoIdDumper(iParams)
         {
         }
 
@@ -668,11 +668,11 @@ namespace flashgg {
 
 } // namespace flashgg
 
-typedef flashgg::TorchDumperBarrel FlashggTorchDumperBarrel;
-DEFINE_FWK_MODULE( FlashggTorchDumperBarrel );
+typedef flashgg::PhoIdDumperBarrel FlashggPhoIdDumperBarrel;
+DEFINE_FWK_MODULE( FlashggPhoIdDumperBarrel );
 
-typedef flashgg::TorchDumperEndcap FlashggTorchDumperEndcap;
-DEFINE_FWK_MODULE( FlashggTorchDumperEndcap );
+typedef flashgg::PhoIdDumperEndcap FlashggPhoIdDumperEndcap;
+DEFINE_FWK_MODULE( FlashggPhoIdDumperEndcap );
 
 
 // Local Variables:
