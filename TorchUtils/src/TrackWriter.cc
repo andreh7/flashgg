@@ -88,71 +88,8 @@ namespace flashgg
 
   //----------------------------------------------------------------------
 
-  template<typename DataType>
-  void TrackWriter::writeFlattenedVector(TorchWriter &tw, 
-					 const std::vector<std::vector<DataType> > &values,
-					 unsigned totNumItems
-					 )
+  TrackWriter::~TrackWriter() 
   {
-    vector<DataType> flatValues(totNumItems);
-
-    unsigned nextPos = 0;
-
-    for (unsigned i = 0; i < values.size(); ++i)
-    {
-      for (unsigned j = 0; j < values[i].size(); ++j)
-	flatValues[nextPos++] = values[i][j];
-  
-    } // loop over tracks
-
-    assert(nextPos == totNumItems);
-
-    tw.writeTypeVector<DataType>(flatValues);
-  }
-
-  //----------------------------------------------------------------------
-
-  void TrackWriter::writeOut(TorchWriter &tw)
-  {
-    // fill tensors to be written out, similar to photon rechits sparse
-    // format
-
-    //----------
-    // calculate first indices
-    //----------
-    vector<int32_t> firstIndex(relpt.size()), numTracks(relpt.size());
-
-    // Torch's indexing is one based
-    int32_t nextStartIndex = 1;
-
-    for (unsigned i = 0; i < relpt.size(); ++i)
-    {
-      firstIndex[i] = nextStartIndex;
-      numTracks[i] = relpt[i].size();
-      
-      nextStartIndex += relpt[i].size();
-    } // loop over photons
-
-    //----------
-    
-    int32_t totNumTracks = nextStartIndex - 1;
-
-    // number of tensors to write out
-    const unsigned tableSize = 7;
-
-    tw.writeInt(tw.MAGIC_TABLE);
-    tw.writeInt(tw.getNextObjectIndex());
-    tw.writeInt(tableSize); // number of variables
-
-    tw.writeInt(tw.MAGIC_STRING); tw.writeString("firstIndex");  tw.writeTypeVector(firstIndex);
-    tw.writeInt(tw.MAGIC_STRING); tw.writeString("numTracks");  tw.writeTypeVector(numTracks);
-
-
-    tw.writeInt(tw.MAGIC_STRING); tw.writeString("relpt"       ); writeFlattenedVector(tw,relpt, totNumTracks);
-    tw.writeInt(tw.MAGIC_STRING); tw.writeString("detaAtVertex"); writeFlattenedVector(tw,detaAtVertex, totNumTracks);
-    tw.writeInt(tw.MAGIC_STRING); tw.writeString("dphiAtVertex"); writeFlattenedVector(tw,dphiAtVertex, totNumTracks);
-    tw.writeInt(tw.MAGIC_STRING); tw.writeString("charge"      ); writeFlattenedVector(tw,charge, totNumTracks);
-    tw.writeInt(tw.MAGIC_STRING); tw.writeString("vtxDz"       ); writeFlattenedVector(tw,vtxDz,  totNumTracks);
   }
 
   //----------------------------------------------------------------------
