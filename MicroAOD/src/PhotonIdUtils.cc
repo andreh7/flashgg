@@ -232,21 +232,21 @@ void PhotonIdUtils::setupMVA( const string &xmlfilenameEB, const string &xmlfile
 
     phoIdMva_EE_ = make_shared<TMVA::Reader>( "!Color:Silent" );
 
-    phoIdMva_EE_->AddVariable( "SCRawE", &phoIdMva_SCRawE_ );
-    phoIdMva_EE_->AddVariable( "r9",                &phoIdMva_R9_ );
-    phoIdMva_EE_->AddVariable( "sigmaIetaIeta",       &phoIdMva_covIEtaIEta_ );
-    phoIdMva_EE_->AddVariable( "etaWidth",        &phoIdMva_EtaWidth_ );
-    phoIdMva_EE_->AddVariable( "phiWidth",        &phoIdMva_PhiWidth_ );
-    phoIdMva_EE_->AddVariable( "covIEtaIPhi", &phoIdMva_covIEtaIPhi_ );
-    phoIdMva_EE_->AddVariable( "s4",     &phoIdMva_S4_ );
-    //    phoIdMva_EE_->AddVariable( "phoIso03",    &phoIdMva_pfPhoIso03_ );
-    phoIdMva_EE_->AddVariable( "isoPhoCorrMax2p5",    &phoIdMva_pfPhoIso03Corr_ );
-    phoIdMva_EE_->AddVariable( "chgIsoWrtChosenVtx",   &phoIdMva_pfChgIso03_ );
-    phoIdMva_EE_->AddVariable( "chgIsoWrtWorstVtx", &phoIdMva_pfChgIso03worst_ );
-    phoIdMva_EE_->AddVariable( "scEta",             &phoIdMva_ScEta_ );
-    phoIdMva_EE_->AddVariable( "rho",                  &phoIdMva_rho_ );
-    phoIdMva_EE_->AddVariable( "esEffSigmaRR",   &phoIdMva_ESEffSigmaRR_ );
-    if(useNewPhoId) phoIdMva_EE_->AddVariable( "esEnergy/SCRawE",   &phoIdMva_esEnovSCRawEn_ );
+    phoIdMva_EE_->AddVariable( "SCRawE", &phoIdInputVars.scRawE );
+    phoIdMva_EE_->AddVariable( "r9",                &phoIdInputVars.r9 );
+    phoIdMva_EE_->AddVariable( "sigmaIetaIeta",       &phoIdInputVars.covIEtaIEta );
+    phoIdMva_EE_->AddVariable( "etaWidth",        &phoIdInputVars.etaWidth );
+    phoIdMva_EE_->AddVariable( "phiWidth",        &phoIdInputVars.phiWidth );
+    phoIdMva_EE_->AddVariable( "covIEtaIPhi", &phoIdInputVars.covIEtaIPhi );
+    phoIdMva_EE_->AddVariable( "s4",     &phoIdInputVars.s4 );
+    //    phoIdMva_EE_->AddVariable( "phoIso03",    &phoIdInputVars.pfPhoIso03 );
+    phoIdMva_EE_->AddVariable( "isoPhoCorrMax2p5",    &phoIdInputVars.pfPhoIso03Corr );
+    phoIdMva_EE_->AddVariable( "chgIsoWrtChosenVtx",   &phoIdInputVars.pfChgIso03 );
+    phoIdMva_EE_->AddVariable( "chgIsoWrtWorstVtx", &phoIdInputVars.pfChgIso03worst );
+    phoIdMva_EE_->AddVariable( "scEta",             &phoIdInputVars.scEta );
+    phoIdMva_EE_->AddVariable( "rho",                  &phoIdInputVars.rho );
+    phoIdMva_EE_->AddVariable( "esEffSigmaRR",   &phoIdInputVars.esEffSigmaRR );
+    if(useNewPhoId) phoIdMva_EE_->AddVariable( "esEnergy/SCRawE",   &phoIdInputVars.esEnovSCRawEn );
     phoIdMva_EE_->BookMVA( mvamethod.c_str(), xmlfilenameEE );
 
 }
