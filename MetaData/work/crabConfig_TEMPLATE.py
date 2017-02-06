@@ -41,6 +41,6 @@ config.Data.outLFNDirBase = "OUTLFN"
 
 config.section_("Site")
 config.Site.storageSite = "OUTSITE"
-#config.Site.blacklist = ["T2_CH_CERN"]
+config.Site.blacklist = ["T2_CH_CERN"]
 #config.Site.blacklist = ["T2_UK_London_Brunel","T1_US_FNAL","T2_US_MIT"]
 
