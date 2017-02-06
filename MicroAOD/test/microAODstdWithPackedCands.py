@@ -5,4 +5,4 @@ import os
 
 execfile(os.path.expandvars("${CMSSW_BASE}/src/flashgg/MicroAOD/test/microAODstd.py"))
 
-process.out.outputCommands.append('drop patPackedCandidates_packedPFCandidates_*_*')
+process.out.outputCommands.append('keep patPackedCandidates_packedPFCandidates_*_*')
