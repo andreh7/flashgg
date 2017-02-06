@@ -54,11 +54,7 @@ namespace flashgg
     /** dz(track vertex - photon vertex) */
     std::vector<std::vector<float> > vtxDz;
 
-    template<typename DataType>
-    void writeFlattenedVector(TorchWriter &tw, 
-			      const std::vector<std::vector<DataType> > &values,
-			      unsigned totNumItems
-			      );
+    //----------------------------------------
 
   public:
 
@@ -71,8 +67,7 @@ namespace flashgg
     /** finds tracks close to this photon and stores the corresponding data */
     void addPhoton(const flashgg::Photon &photon, const edm::Ptr<reco::Vertex> &photonVertex);
 
-    /** called at the end to write out the collected data */
-    void writeOut(TorchWriter &tw);
+    virtual ~TrackWriter();
 
   };
 }
