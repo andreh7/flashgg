@@ -109,7 +109,15 @@ git cms-addpkg RecoJets/JetProducers
 git cms-merge-topic -u sethzenz:for-flashgg-QGL-vertexIndex-8_0_20
 
 echo "grabbing MET topic updates..."
-git cms-merge-topic cms-met:METRecipe_8020
+# git cms-merge-topic cms-met:METRecipe_8020
+git remote add cms-met2 https://github.com/cms-met/cmssw.git
+git fetch cms-met2
+# see https://github.com/cms-met/cmssw/commits/METRecipe_8020
+# GIT_MERGE_AUTOEDIT=no git merge 6d30502   # gives conflicts later on
+# GIT_MERGE_AUTOEDIT=no git merge f0de6af   # gives conflicts later on
+# GIT_MERGE_AUTOEDIT=no git merge f28b9de   # gives conflicts later on
+# GIT_MERGE_AUTOEDIT=no git merge 7a07643   # gives conflicts later on
+GIT_MERGE_AUTOEDIT=no git merge 2ce1d9f
 
 # NO LONGER NEEDED BECAUSE THE BRANCH ABOVE WAS UPDATED (TBC)
 #echo "Cherry-pick for MET JES, including adding and removing met repo"
