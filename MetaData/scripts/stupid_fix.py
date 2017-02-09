@@ -21,6 +21,7 @@ for fn in listdir("."):
                     # 2016
                     shortName = shortName.replace("RunIISpring16MiniAODv1-PUSpring16RAWAODSIM", "")
                     shortName = shortName.replace("RunIISpring16MiniAODv1-PUSpring16", "")
+                    shortName = shortName.replace("RunIISummer16MiniAODv2-PUMoriond17", "")
                     if len(shortName) >= 100:
                         shortName = shortName.replace("_TuneCUETP8M1_13TeV_Pythia8","").replace("_TuneCUETP8M1","")
                         shortName = shortName.replace("_amcatnloFXFX_madspin_","").replace("_amcFX_MS_","")
