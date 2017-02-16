@@ -397,7 +397,7 @@ class WorkNodeJobFactory(object):
     
     # ------------------------------------------------------------------------------------------------
     def __init__(self,stage_dest,
-                 stage_cmd="cp -pv",stage_patterns=["'*.root'","'*.xml'", "'*.t7'"],job_outdir=None,runner=None,batchSystem="auto",copy_proxy=True):
+                 stage_cmd="cp -pv",stage_patterns=["'*.root'","'*.xml'", "'*.t7'", "'*.npz'"],job_outdir=None,runner=None,batchSystem="auto",copy_proxy=True):
         
         if not runner:
             self.runner = BatchRegistry.getRunner(batchSystem)
