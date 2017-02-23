@@ -9,9 +9,14 @@
 #include "flashgg/MicroAOD/interface/PhotonIdUtils.h"
 #include "flashgg/DataFormats/interface/DiPhotonCandidate.h"
 #include "RecoEgamma/EgammaTools/interface/EffectiveAreas.h"
+#include "FWCore/Utilities/interface/RandomNumberGenerator.h"
+
+#include "CLHEP/Random/RandomEngine.h"
+#include "CLHEP/Random/RandFlat.h"
 
 #include "TFile.h"
 #include "TGraph.h"
+#include "TVectorD.h"
 
 using namespace std;
 using namespace edm;
@@ -26,6 +31,9 @@ namespace flashgg {
         void produce( edm::Event &, const edm::EventSetup & ) override;
 
     private:
+        /** random number generator for simple photon iso smearing */
+        double simpleSmearPhotonIso(edm::Event &event, double eta, double iso);
+
         edm::EDGetTokenT<edm::View<flashgg::DiPhotonCandidate> > token_;
         edm::EDGetTokenT<double> rhoToken_;
         PhotonIdUtils phoTools_;
@@ -43,6 +51,16 @@ namespace flashgg {
         EffectiveAreas _effectiveAreas;
         vector<double> _phoIsoPtScalingCoeff;
         double _phoIsoCutoff;
+        bool _doSimpleIsoCorrection;
+
+        // index 0 is barrel, 1 is endcap
+        TGraph *simplePhoIsoTransformation[2];
+
+        // fraction of events at photon isolation zero
+        // index 0 is barrel, 1 is endcap
+        double simplePhoIsoZeroFraction_MC[2], simplePhoIsoZeroFraction_data[2]; 
+        
+        edm::Service<edm::RandomNumberGenerator> simplePhotonIsoRNG;
     };
 
     DiPhotonWithUpdatedPhoIdMVAProducer::DiPhotonWithUpdatedPhoIdMVAProducer( const edm::ParameterSet &ps ) :
@@ -51,8 +69,45 @@ namespace flashgg {
         debug_( ps.getParameter<bool>( "Debug" ) ),
         _effectiveAreas((ps.getParameter<edm::FileInPath>("effAreasConfigFile")).fullPath()),
         _phoIsoPtScalingCoeff(ps.getParameter<std::vector<double >>("phoIsoPtScalingCoeff")),
-        _phoIsoCutoff(ps.getParameter<double>("phoIsoCutoff"))
+        _phoIsoCutoff(ps.getParameter<double>("phoIsoCutoff")),
+        _doSimpleIsoCorrection(ps.getParameter<bool>("doSimpleIsoCorrection"))
     {
+        if (_doSimpleIsoCorrection) {
+            cout << "applying simple photon isolation smearing" << endl;
+            string fname = ps.getParameter<edm::FileInPath>("simpleIsoCorrectionFile").fullPath();
+
+            // get the correction graphs for barrel and endcap
+            // make a clone of the graph so we can close the file
+            TFile *fin = new TFile(fname.c_str());
+            
+            // get the fractions of data and MC at zero bin
+            simplePhoIsoTransformation[0] = (TGraph*)(fin->Get("transfPhIsoEB")->Clone());
+            simplePhoIsoTransformation[1] = (TGraph*)(fin->Get("transfPhIsoEE")->Clone());
+
+            TVectorD *vec;
+            vec = (TVectorD*) fin->Get("phoIsoZeroFraction_MC_EB");
+            simplePhoIsoZeroFraction_MC[0]   = (*vec)[0];
+            vec = (TVectorD*) fin->Get("phoIsoZeroFraction_data_EB");
+            simplePhoIsoZeroFraction_data[0] = (*vec)[0];
+            vec = (TVectorD*) fin->Get("phoIsoZeroFraction_MC_EE");
+            simplePhoIsoZeroFraction_MC[1]   = (*vec)[0];
+            vec = (TVectorD*) fin->Get("phoIsoZeroFraction_data_EE");
+            simplePhoIsoZeroFraction_data[1] = (*vec)[0];
+
+            fin->Close();
+            delete fin;
+
+            if( ! simplePhotonIsoRNG.isAvailable() ) {
+                throw cms::Exception( "Configuration" ) << "simple photon isolation smearing requires the RandomNumberGeneratorService  - please add to configuration";
+            }
+
+        } else {
+            for (unsigned index = 0; index < 2; ++index) {
+                simplePhoIsoTransformation[index]    = NULL;
+                simplePhoIsoZeroFraction_MC[index]   = -1;
+                simplePhoIsoZeroFraction_data[index] = -1;
+            }
+        }
 
         useNewPhoId_ = ps.getParameter<bool>( "useNewPhoId" );
         phoIdMVAweightfileEB_ = ps.getParameter<edm::FileInPath>( "photonIdMVAweightfile_EB" );
@@ -227,6 +282,29 @@ namespace flashgg {
                 }
             }
 
+            //----------
+            if (not evt.isRealData() and  _doSimpleIsoCorrection ) {
+                float lead_iso = new_obj->getLeadingPhoton().pfPhoIso03();
+                float sublead_iso = new_obj->getSubLeadingPhoton().pfPhoIso03();
+                float lead_eta = new_obj->getLeadingPhoton().superCluster()->eta();
+                float sublead_eta = new_obj->getSubLeadingPhoton().superCluster()->eta();
+                if (this->debug_) {
+                    std::cout << "Doing Iso correction to lead (sublead) photon with eta,iso: " << lead_eta << ", " << lead_iso;
+                    std::cout << " (" << sublead_eta << ", " << ", " << sublead_iso << ")" << std::endl;
+                }
+
+                float new_iso_lead = simpleSmearPhotonIso(evt, lead_eta, lead_iso);
+                float new_iso_sublead = simpleSmearPhotonIso(evt, sublead_eta, sublead_iso);
+                new_obj->getLeadingPhoton().setpfPhoIso03(new_iso_lead);
+                new_obj->getSubLeadingPhoton().setpfPhoIso03(new_iso_sublead);
+                if (this->debug_) {
+                    std::cout << " Final iso value for lead (sublead) photon: " << new_obj->getLeadingPhoton().pfPhoIso03() << " (" 
+                              << new_obj->getSubLeadingPhoton().pfPhoIso03() << ")" << std::endl;
+                }
+            }
+
+            //----------
+
             if (this->debug_) {
                 std::cout << " Input DiPhoton lead (sublead) MVA: " << obj.leadPhotonId() << " " << obj.subLeadPhotonId() << std::endl;
             }
@@ -245,6 +323,56 @@ namespace flashgg {
         }
         evt.put(out_obj);
     }
+
+    //----------------------------------------------------------------------
+
+    /** do simple photon iso smearing on MC (this should not be called on data) */
+    double DiPhotonWithUpdatedPhoIdMVAProducer::simpleSmearPhotonIso(edm::Event &event, double eta, double iso) {
+
+        double abseta = fabs(eta);
+
+        unsigned index;
+
+        if (abseta < 1.5) {
+            // barrel
+            index = 0;
+        } else {
+            // endcap
+            index = 1;
+        }
+        
+        // no data beween zero and this value
+        const double phIsoMinVal = 0.03;
+
+        // range to which to smear the excess MC values at zero
+        const double smearBegin = 0.01;
+        const double smearEnd = phIsoMinVal;
+
+        CLHEP::HepRandomEngine & engine = simplePhotonIsoRNG->getEngine( event.streamID() );
+
+
+        if (iso <= phIsoMinVal) {
+            // decide whether this an excess event or not
+            if (CLHEP::RandFlat::shoot(&engine, 0., 1.) * simplePhoIsoZeroFraction_MC[index] > simplePhoIsoZeroFraction_data[index]) {
+
+                // spread the event evenly to the target range
+                iso = CLHEP::RandFlat::shoot(&engine, smearBegin, smearEnd);
+
+                // now apply the transformation
+                iso = simplePhoIsoTransformation[index]->Eval(iso);
+
+            } else {
+                // event stays at zero, do NOT feed through the correction graph
+            }
+        } else {
+            // non-zero value, apply the correction graph
+            iso = simplePhoIsoTransformation[index]->Eval(iso);
+        }
+
+        return iso;
+    }
+
+    //----------------------------------------------------------------------
 }
 
 typedef flashgg::DiPhotonWithUpdatedPhoIdMVAProducer FlashggDiPhotonWithUpdatedPhoIdMVAProducer;
