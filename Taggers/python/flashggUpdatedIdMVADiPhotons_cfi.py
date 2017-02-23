@@ -30,5 +30,16 @@ flashggUpdatedIdMVADiPhotons = cms.EDProducer("FlashggDiPhotonWithUpdatedPhoIdMV
                                               doNon5x5transformation   = cms.bool(False),
                                               non5x5correctionFile     = cms.FileInPath("flashgg/MicroAOD/data/transformation_Moriond17_non5x5_v1.root"),
 
-                                              Debug                    = cms.bool(False)
+                                              Debug                    = cms.bool(False),
+
+                                              # do simple photon isolation correction
+                                              doSimpleIsoCorrection    = cms.bool(True),
+                                              simpleIsoCorrectionFile  = cms.FileInPath("flashgg/Taggers/data/simple_pho_iso_corrections_transformations.root"),
                                               )
+
+# add the following to the top level configuration file given to cmsRun
+# 
+# process.RandomNumberGeneratorService.flashggUpdatedIdMVADiPhotons = cms.PSet(
+#     initialSeed = cms.untracked.uint32(1773),
+#     engineName = cms.untracked.string('TRandom3')
+#   )
