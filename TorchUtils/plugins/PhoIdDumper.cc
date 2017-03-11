@@ -6,6 +6,9 @@
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "flashgg/TorchUtils/interface/PhoIdWriterTorch.h"
 #include "flashgg/TorchUtils/interface/TrackWriterTorch.h"
+#include "flashgg/TorchUtils/interface/PhoIdWriterNumpy.h"
+
+#include <boost/algorithm/string/predicate.hpp>
 
 
 using namespace std;
@@ -145,7 +148,12 @@ namespace flashgg {
                 phoIdInputVarsToken = consumes<flashgg::DiPhotonPhoIdMVAInputVarsAssociation>( iConfig.getParameter<InputTag> ( "photonIdInputVarsInputTag" ));
             }
 
-        phoIdWriter = new PhoIdWriterTorch();
+        if (boost::algorithm::ends_with(outputFname, ".npz"))
+            phoIdWriter = new PhoIdWriterNumpy();
+        else
+            // assume Torch output format
+            phoIdWriter = new PhoIdWriterTorch();
+                
         trackWriter = new TrackWriterTorch(iConfig, consumesCollector());
     }
 
