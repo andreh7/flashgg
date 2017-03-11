@@ -117,6 +117,7 @@ namespace flashgg {
                        );
 
         friend class PhoIdWriterTorch;
+        friend class PhoIdWriterNumpy;
     };
 
     //----------------------------------------------------------------------
