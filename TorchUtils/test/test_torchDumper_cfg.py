@@ -83,7 +83,7 @@ if True:
 
         for subdet in [ process.flashggTorchDumperBarrel,
                         process.flashggTorchDumperEndcap ]:
-            subdet.output = cms.untracked.string(str(customize.processId) + "_" + re.sub("\.t7$","", subdet.output.value()) + "_%d.t7" % customize.options.jobId)
+            subdet.output = cms.untracked.string(str(customize.processId) + "_" + re.sub("\.t7$","", subdet.output.value()) + "_%d.npz" % customize.options.jobId)
     else:
         raise Exception("jobId not found")
 
