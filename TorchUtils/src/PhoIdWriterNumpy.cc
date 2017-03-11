@@ -27,10 +27,11 @@ namespace flashgg
         string desc = "{'descr': '<" + dataType + "', 'fortran_order': False, 'shape': (";
 
         for (unsigned i = 0; i < dimensions.size(); ++i) {
-            if (i > 0)
-                desc += ", ";
-
             desc += boost::lexical_cast<string>(dimensions[i]);
+
+            // put a comma also after the last item
+            // (e.g. in case we have a 1D array)
+            desc += ", ";
         }
 
         desc += "), }";
