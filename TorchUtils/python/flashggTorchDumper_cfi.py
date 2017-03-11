@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-flashggTorchDumperBarrel = cms.EDAnalyzer('FlashggTorchDumperBarrel',
+flashggTorchDumperBarrel = cms.EDAnalyzer('FlashggPhoIdDumperBarrel',
                                           diphotonsInput = cms.InputTag('flashggPreselectedDiPhotons'),
                                           # diphotonsInput = cms.InputTag('flashggUpdatedIdMVADiPhotons'),
                                           
@@ -13,7 +13,7 @@ flashggTorchDumperBarrel = cms.EDAnalyzer('FlashggTorchDumperBarrel',
                                           writePhotonIdInputVars = cms.untracked.bool(True),
                                           )
 
-flashggTorchDumperEndcap = cms.EDAnalyzer('FlashggTorchDumperEndcap',
+flashggTorchDumperEndcap = cms.EDAnalyzer('FlashggPhoIdDumperEndcap',
                                           diphotonsInput = cms.InputTag('flashggPreselectedDiPhotons'),
                                           # diphotonsInput = cms.InputTag('flashggUpdatedIdMVADiPhotons'),
                                           
