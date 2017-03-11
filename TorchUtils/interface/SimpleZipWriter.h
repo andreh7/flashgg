@@ -35,6 +35,8 @@ class SimpleZipWriter
  public:  
   SimpleZipWriter(std::ostream &zip_);
 
+  ~SimpleZipWriter();
+
  protected:
   /** @param local if true, writes a local file header, if false writes a central directory header */
   void writeZipEntry(const ZipEntryData &entry, bool local);
@@ -42,7 +44,9 @@ class SimpleZipWriter
  public:
   void addFile(const std::string &fname, const std::string &data);
 
-  /** writes the directory record at the end of the zip file */
+ protected: 
+  /** writes the directory record at the end of the zip file. Automatically called
+      in the destructor.*/
   void writeDirectory();
 
 
