@@ -83,6 +83,11 @@ namespace flashgg {
         // other photon variables
         //----------
         std::vector<float> photonEt;
+        std::vector<float> photonPhi;
+
+        // this is mostly for checking the correct
+        // cut was applied
+        std::vector<float> diphotonMass;
 
         //----------
 
@@ -117,7 +122,8 @@ namespace flashgg {
                        float weight, float mvaID,
                        float chosenVertexChargedIso,
                        float worstVertexChargedIso,
-                       const PhoIdMVAInputVars *phoIdInputVars
+                       const PhoIdMVAInputVars *phoIdInputVars,
+                       const flashgg::DiPhotonCandidate &diphoton
                        );
 
         friend class PhoIdWriterTorch;

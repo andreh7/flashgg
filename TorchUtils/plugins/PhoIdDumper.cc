@@ -72,7 +72,8 @@ namespace flashgg {
                                 float weight, float mvaID,
                                 float chosenVertexChargedIso,
                                 float worstVertexChargedIso,
-                                const PhoIdMVAInputVars *phoIdInputVars
+                                const PhoIdMVAInputVars *phoIdInputVars,
+                                const flashgg::DiPhotonCandidate &diphoton
                                 )
     {
         float label = photon.genMatchType() == flashgg::Photon::kPrompt ? 1 : 0;
@@ -128,6 +129,9 @@ namespace flashgg {
 
                 // other photon variables
                 photonEt.push_back(photon.et());
+                photonPhi.push_back(photon.phi());
+
+                diphotonMass.push_back(diphoton.mass());
 
                 // tracks
                 trackWriter->addPhoton(photon, photonVertex);
@@ -216,7 +220,8 @@ namespace flashgg {
                           diphoton->leadingView()->phoIdMvaWrtChosenVtx(),
                           diphoton->leadingView()->pfChIso03WrtChosenVtx(),
                           diphoton->leadingPhoton()->pfChgIsoWrtWorstVtx04(),
-                          phoIdInputVarsLeading
+                          phoIdInputVarsLeading,
+                          *diphoton
                           );
                 addPhoton(iEvent.id(),
                           *diphoton->subLeadingPhoton(), 
@@ -225,7 +230,8 @@ namespace flashgg {
                           diphoton->subLeadingView()->phoIdMvaWrtChosenVtx(),
                           diphoton->subLeadingView()->pfChIso03WrtChosenVtx(),
                           diphoton->subLeadingPhoton()->pfChgIsoWrtWorstVtx04(),
-                          phoIdInputVarsSubLeading
+                          phoIdInputVarsSubLeading,
+                          *diphoton
                           );
 
                 // only consider the first pair (how are they sorted ?)

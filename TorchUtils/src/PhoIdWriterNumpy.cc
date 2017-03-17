@@ -217,10 +217,13 @@ namespace flashgg
             }
 
         //----------
-        // other photon variables (e.g. Et for Et flattening)
+        // other photon variables (e.g. Et for Et flattening and phi for checking
+        // the mass cut)
         //----------
         {
-            writeTypeVector(zip, "phoVars/phoEt", dumper.photonEt);
+            writeTypeVector(zip, "phoVars/phoEt",     dumper.photonEt);
+            writeTypeVector(zip, "phoVars/phoPhi",    dumper.photonPhi);
+            writeTypeVector(zip, "phoVars/diphoMass", dumper.diphotonMass);
         }
 
         //----------
