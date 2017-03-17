@@ -82,3 +82,18 @@ for mod in (process.flashggTorchDumperBarrel, process.flashggTorchDumperEndcap):
     # mod.diphotonsInput = cms.InputTag('flashggUpdatedIdMVADiPhotons')
 
     # mod.writePhotonIdInputVars = cms.untracked.bool(False)
+
+
+#----------
+# from Inna
+#----------
+process.flashggPreselectedDiPhotons.cut=cms.string(
+        "mass > 95"
+        " && leadingPhoton.pt > 18 && subLeadingPhoton.pt > 18"
+        " && abs(leadingPhoton.superCluster.eta)<2.5 && abs(subLeadingPhoton.superCluster.eta)<2.5 "
+        " && ( abs(leadingPhoton.superCluster.eta)<1.4442 || abs(leadingPhoton.superCluster.eta)>1.566)"
+        " && ( abs(subLeadingPhoton.superCluster.eta)<1.4442 || abs(subLeadingPhoton.superCluster.eta)>1.566)"
+        " && (leadingPhoton.pt > 14 && leadingPhoton.hadTowOverEm < 0.15 && (leadingPhoton.full5x5_r9>0.8 || leadingPhoton.chargedHadronIso<20 || leadingPhoton.chargedHadronIso<(0.3*leadingPhoton.pt)))"
+        " && (subLeadingPhoton.pt > 14 && subLeadingPhoton.hadTowOverEm < 0.15 && (subLeadingPhoton.full5x5_r9>0.8 || subLeadingPhoton.chargedHadronIso<20 || subLeadingPhoton.chargedHadronIso<(0.3*subLeadingPhoton.pt)))"
+        )
+#----------
