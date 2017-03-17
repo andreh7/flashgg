@@ -40,7 +40,10 @@ namespace flashgg {
         /** window sizes */
         const unsigned windowHalfWidth;
         const unsigned windowHalfHeight;
-
+        
+        /** run/ls/event number for comparison purposes */
+        std::vector<unsigned> runNumber, lsNumber;
+        std::vector<unsigned long long> eventNumber;
 
         /** rechit information to be written out at the end */
         std::vector<std::vector<PhoIdWriter::RecHitData> > recHits;
@@ -108,7 +111,8 @@ namespace flashgg {
         /** called to check if a photon is in barrel/endcap */
         virtual bool isPhotonInSubdet(const flashgg::Photon &photon) = 0;
 
-        void addPhoton(const flashgg::Photon &photon, 
+        void addPhoton(const edm::EventID &eventId, 
+                       const flashgg::Photon &photon, 
                        const edm::Ptr<reco::Vertex> &photonVertex,
                        float weight, float mvaID,
                        float chosenVertexChargedIso,

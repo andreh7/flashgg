@@ -67,7 +67,7 @@ namespace flashgg {
 
     //----------------------------------------
 
-    void PhoIdDumper::addPhoton(const flashgg::Photon &photon, 
+    void PhoIdDumper::addPhoton(const edm::EventID &eventId, const flashgg::Photon &photon, 
                                 const edm::Ptr<reco::Vertex> &photonVertex,
                                 float weight, float mvaID,
                                 float chosenVertexChargedIso,
@@ -92,6 +92,11 @@ namespace flashgg {
                 // ignore 'empty' photons for the moment
                 if (rechits.size() < 1)
                     return;
+
+                // event identification
+                this->runNumber.push_back(eventId.run());
+                this->lsNumber.push_back(eventId.luminosityBlock());
+                this->eventNumber.push_back(eventId.event());
 
                 this->recHits.push_back(rechits);
                 this->weights.push_back(weight);
@@ -204,7 +209,8 @@ namespace flashgg {
                         phoIdInputVarsSubLeading = &(diphoInputVars->getInputsSubLeading());
                     }
 
-                addPhoton(*diphoton->leadingPhoton(), 
+                addPhoton(iEvent.id(),
+                          *diphoton->leadingPhoton(), 
                           diphoton->vtx(),
                           weight, 
                           diphoton->leadingView()->phoIdMvaWrtChosenVtx(),
@@ -212,7 +218,8 @@ namespace flashgg {
                           diphoton->leadingPhoton()->pfChgIsoWrtWorstVtx04(),
                           phoIdInputVarsLeading
                           );
-                addPhoton(*diphoton->subLeadingPhoton(), 
+                addPhoton(iEvent.id(),
+                          *diphoton->subLeadingPhoton(), 
                           diphoton->vtx(), 
                           weight, 
                           diphoton->subLeadingView()->phoIdMvaWrtChosenVtx(),

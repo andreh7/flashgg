@@ -89,6 +89,44 @@ namespace flashgg
         // add this to the zip archive
         zip.addFile(path, os.str());
     }
+
+    //----------------------------------------------------------------------
+
+    template<>
+    void PhoIdWriterNumpy::writeTypeVector<uint32_t>(SimpleZipWriter &zip, const std::string &path, 
+                                                    std::vector<uint32_t> &values) {
+  
+        ostringstream os;
+        vector<unsigned> dimensions;
+        dimensions.push_back(values.size());
+        writeNdArrayHeader(os, "u4", dimensions);
+
+        for (unsigned row = 0; row < values.size(); ++row) {
+            os.write((char*)&values[row], sizeof(uint32_t));
+        }
+
+        // add this to the zip archive
+        zip.addFile(path, os.str());
+    }
+
+    //----------------------------------------------------------------------
+
+    template<>
+    void PhoIdWriterNumpy::writeTypeVector<unsigned long long>(SimpleZipWriter &zip, const std::string &path, 
+                                                    std::vector<unsigned long long> &values) {
+  
+        ostringstream os;
+        vector<unsigned> dimensions;
+        dimensions.push_back(values.size());
+        writeNdArrayHeader(os, "u8", dimensions);
+
+        for (unsigned row = 0; row < values.size(); ++row) {
+            os.write((char*)&values[row], sizeof(unsigned long long));
+        }
+
+        // add this to the zip archive
+        zip.addFile(path, os.str());
+    }
                                 
     //----------------------------------------------------------------------
 
@@ -148,6 +186,10 @@ namespace flashgg
         else
             writeRecHits(zip, dumper.recHits, dumper.windowHalfWidth, dumper.windowHalfHeight);
 
+        // event identification
+        writeTypeVector(zip, "run", dumper.runNumber);
+        writeTypeVector(zip, "ls", dumper.lsNumber);
+        writeTypeVector(zip, "event", dumper.eventNumber);
     
         writeTypeVector(zip, "y",      dumper.labels);
         writeTypeVector(zip, "weight", dumper.weights);
