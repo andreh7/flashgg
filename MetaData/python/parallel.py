@@ -909,7 +909,7 @@ class Wrap:
     
 # -----------------------------------------------------------------------------------------------------
 class Parallel:
-    def __init__(self,ncpu,lsfQueue=None,lsfJobName="job",asyncLsf=False,maxThreads=500,jobDriver=None,batchSystem="lsf"):
+    def __init__(self,ncpu,lsfQueue=None,lsfJobName="job",asyncLsf=False,maxThreads=500,jobDriver=None,batchSystem="lsf", skipJobIndices = []):
         self.returned = Queue()
 	self.njobs = 0
         self.JobDriver=jobDriver
@@ -921,6 +921,7 @@ class Parallel:
         self.maxThreads = maxThreads
         self.asyncLsf = asyncLsf
         self.batchSystem = batchSystem
+        self.skipJobIndices = list(skipJobIndices)
 
         if self.lsfQueue:
             self.running = Queue()
@@ -995,19 +996,32 @@ class Parallel:
         
     def __call__(self,cmd,args,interactive,jobName=None,replacesJob=None):
 
+        # for skipping jobs based on job indices
+        doRun = True
+
         if type(cmd) == str or type(cmd) == unicode:
             ## print cmd
             cmd = "%s %s" % (cmd, " ".join(args) )
             args = (cmd,)
             if self.lsfQueue and not interactive:
                 if not jobName:
-                    jobName = "%s%d" % (self.lsfJobName,self.getJobId())
+                    jobId = self.getJobId()
+                    jobName = "%s%d" % (self.lsfJobName,jobId)
+
+                    doRun = not jobId in self.skipJobIndices
+
                 cmd = self.JobDriver(self.lsfQueue,jobName,async=self.asyncLsf,replacesJob=replacesJob)
             else:
                 cmd = commands.getstatusoutput
 
-        ret = cmd( *args )
-        if self.lsfQueue and not interactive and self.asyncLsf:
+        if doRun:
+            ret = cmd( *args )
+        else:
+            #     exit status
+            #         out     
+            ret = 0, ("",(self.lsfJobName,jobId))
+
+        if self.lsfQueue and not interactive and self.asyncLsf and doRun:
             self.lsfJobs.put(cmd)
         return cmd,args,ret
     

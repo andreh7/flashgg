@@ -124,6 +124,13 @@ class JobsManager(object):
                             help="specify secondaryDataset/dataTier to be used as a secondary input source (e.g. AODSIM)"
                             ),
 
+                make_option("--skip-job-indices", 
+                            default = None,
+                            dest="skipJobIndices",
+                            type="string",
+                            help="comma separated list of job indices (integers) to skip"
+                            ),
+
                 ]
                               )
         
@@ -160,6 +167,11 @@ class JobsManager(object):
             # remove any leading and trailing slashes
             self.options.additionalDatasetSuffix = self.options.additionalDatasetSuffix.strip('/')
 
+        if self.options.skipJobIndices:
+            self.options.skipJobIndices = [ int(x) for x in self.options.skipJobIndices.split(',') ]
+        else:
+            self.options.skipJobIndices = []
+
     # -------------------------------------------------------------------------------------------------------------------
     def __call__(self):
         """
@@ -173,7 +185,8 @@ class JobsManager(object):
         self.jobFactory = WorkNodeJobFactory(self.options.stageTo,self.options.stageCmd,job_outdir=self.options.outputDir,
                                             batchSystem=self.options.batchSystem,copy_proxy=self.options.copy_proxy)
         self.parallel = Parallel(self.options.ncpu,lsfQueue=self.options.queue,lsfJobName="%s/runJobs" % self.options.outputDir,
-                                 asyncLsf=self.options.asyncLsf,jobDriver=self.jobFactory,batchSystem=self.options.batchSystem)
+                                 asyncLsf=self.options.asyncLsf,jobDriver=self.jobFactory,batchSystem=self.options.batchSystem,
+                                 skipJobIndices = self.options.skipJobIndices)
         
         self.jobs = None
         if self.options.cont:
