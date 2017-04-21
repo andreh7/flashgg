@@ -73,6 +73,32 @@ namespace flashgg
 
   //----------------------------------------------------------------------
 
+  /** converts vector of unsigned to a vector of signed integers
+      to write it out to Torch files which do not support unsigned types */
+  std::vector<int> PhoIdWriterTorch::toSigned(const std::vector<unsigned> &values) {
+    std::vector<int> retval(values.size());
+    for (unsigned i = 0; i < values.size(); ++i) {
+      retval[i] = (int)values[i];
+    }
+
+    return retval;
+  }
+
+  //----------------------------------------------------------------------
+
+  /** converts vector of unsigned long long to a vector of signed long long
+      to write it out to Torch files which do not support unsigned types */
+  std::vector<long long> PhoIdWriterTorch::toSigned(const std::vector<unsigned long long> &values) {
+    std::vector<long long> retval(values.size());
+    for (unsigned i = 0; i < values.size(); ++i) {
+      retval[i] = (long long)values[i];
+    }
+
+    return retval;
+  }
+
+  //----------------------------------------------------------------------
+
   void PhoIdWriterTorch::writeTo(PhoIdDumper &dumper, const std::string &fname)
   {
     // write a dict/table with 
@@ -94,6 +120,11 @@ namespace flashgg
     // for writing other photon variables
     tableSize += 1;
 
+    // for writing run/ls/event
+    tableSize += 3;
+
+    //----------
+
     std::ofstream os(fname.c_str());
     TorchWriter tw(os);
 
@@ -108,6 +139,11 @@ namespace flashgg
       writeRecHitsSparse(tw, dumper.recHits);
     else
       writeRecHits(tw, dumper.recHits, dumper.windowHalfWidth, dumper.windowHalfHeight);
+
+    // event identification
+    tw.writeInt(tw.MAGIC_STRING); tw.writeString("run");    tw.writeTypeVector(toSigned(dumper.runNumber));
+    tw.writeInt(tw.MAGIC_STRING); tw.writeString("ls");     tw.writeTypeVector(toSigned(dumper.lsNumber));
+    tw.writeInt(tw.MAGIC_STRING); tw.writeString("event");  tw.writeTypeVector(toSigned(dumper.eventNumber));
 
     tw.writeInt(tw.MAGIC_STRING); tw.writeString("y");      tw.writeTypeVector(dumper.labels);
     tw.writeInt(tw.MAGIC_STRING); tw.writeString("weight"); tw.writeTypeVector(dumper.weights);

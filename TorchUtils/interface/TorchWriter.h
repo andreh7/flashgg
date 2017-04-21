@@ -168,6 +168,12 @@ namespace flashgg
     writeTypeTensorHelper<int32_t>(sizes, data, "torch.IntTensor", "torch.IntStorage");
   }
 
+  template<>
+  inline void TorchWriter::writeTypeTensor<long long>(const std::vector<unsigned> &sizes, const std::vector<long long> &data) 
+  {
+    writeTypeTensorHelper<long long>(sizes, data, "torch.LongTensor", "torch.LongStorage");
+  }
+
 
 
 } // namespace flashgg

@@ -63,7 +63,14 @@ namespace flashgg
 	tw.writeTypeVector<DataType>(values);
       }
     //----------------------------------------
+
+ private:
+  static std::vector<int> toSigned(const std::vector<unsigned> &values);
+  static std::vector<long long> toSigned(const std::vector<unsigned long long> &values);
+
   };
+
+
 }
 
 #endif
