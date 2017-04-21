@@ -58,6 +58,9 @@ namespace flashgg {
         /** whether to also write the official photon ID mva input variables or not */
         const bool writePhotonIdInputVarsFlag;
 
+        /** whether or not to divide all rechit energies by the maximum rechit energy */
+        const bool normalizeRecHitsToMax;
+
         /** value map for diphoton input variables association */
         edm::EDGetTokenT<flashgg::DiPhotonPhoIdMVAInputVarsAssociation> phoIdInputVarsToken;
 
@@ -105,8 +108,12 @@ namespace flashgg {
         virtual void wrapCoordinates(PhoIdWriter::RecHitData &rechit) = 0;
 
         /** finds the crystal with the maximum energy, normalizes to that and applies the given window around
-            the maximum */
-        void applyWindowAndNormalizeEnergy(std::vector<PhoIdWriter::RecHitData> &rechits, int windowHalfWidth, int windowHalfHeight);
+            the maximum
+            
+            @param normalizeToMax if true (used at the beginning), divide all rechit energies by the energy of the maximum rechit
+            (the value stored for the maximum rechit will be one unless all rechits had energies <= 0)
+        */
+        void applyWindowAndNormalizeEnergy(std::vector<PhoIdWriter::RecHitData> &rechits, int windowHalfWidth, int windowHalfHeight, bool normalizeToMax);
 
         //----------------------------------------
 

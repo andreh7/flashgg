@@ -20,7 +20,7 @@ namespace flashgg {
 
     //----------------------------------------------------------------------
 
-    void PhoIdDumper::applyWindowAndNormalizeEnergy(std::vector<PhoIdWriter::RecHitData> &rechits, int windowHalfWidth, int windowHalfHeight)
+    void PhoIdDumper::applyWindowAndNormalizeEnergy(std::vector<PhoIdWriter::RecHitData> &rechits, int windowHalfWidth, int windowHalfHeight, bool normalizeRecHitsToMax)
     {
         if (rechits.size() < 1)
             return;
@@ -44,7 +44,7 @@ namespace flashgg {
         for (int i = rechits.size() - 1; i >= 0; --i)
             {
                 // normalize energy
-                if (maxEnergy > 0)
+                if (normalizeRecHitsToMax && maxEnergy > 0)
                     rechits[i].energy /= maxEnergy;
                 
                 // center coordinate
@@ -88,7 +88,7 @@ namespace flashgg {
                 // TODO: do we need to check this ? We already check in the following function
                 //       for each rechit
                 fillRecHits(photon, rechits);
-                applyWindowAndNormalizeEnergy(rechits, windowHalfWidth, windowHalfHeight);
+                applyWindowAndNormalizeEnergy(rechits, windowHalfWidth, windowHalfHeight, normalizeRecHitsToMax);
 
                 // ignore 'empty' photons for the moment
                 if (rechits.size() < 1)
@@ -149,7 +149,10 @@ namespace flashgg {
         windowHalfWidth( iConfig.getUntrackedParameter<unsigned>("windowHalfWidth")),
         windowHalfHeight( iConfig.getUntrackedParameter<unsigned>("windowHalfHeight")),
 
-        writePhotonIdInputVarsFlag ( iConfig.getUntrackedParameter<bool>("writePhotonIdInputVars"))
+        writePhotonIdInputVarsFlag ( iConfig.getUntrackedParameter<bool>("writePhotonIdInputVars")),
+
+        normalizeRecHitsToMax ( iConfig.getUntrackedParameter<bool>("normalizeRecHitsToMax"))
+        
 
     {
         if (writePhotonIdInputVarsFlag)
