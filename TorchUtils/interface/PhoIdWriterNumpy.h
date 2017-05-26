@@ -21,8 +21,8 @@ namespace flashgg
         virtual void writeTo(PhoIdDumper &dumper, const std::string &fname) override;
 
     protected:
-        void writeNdArrayHeader(std::ostream &os, const std::string &dataType, 
-                                const std::vector<unsigned> &dimensions);
+        void static writeNdArrayHeader(std::ostream &os, const std::string &dataType, 
+                                       const std::vector<unsigned> &dimensions);
 
         void writeRecHits(SimpleZipWriter &zip, const std::vector<std::vector<RecHitData> > &rechits, 
                           int windowHalfWidth, int windowHalfHeight);
@@ -43,11 +43,13 @@ namespace flashgg
 
         //----------------------------------------
 
+    public:
         /** to write out nd arrays into the .npz file */
         template<typename DataType>
-        void writeTypeVector(SimpleZipWriter &zip, const std::string &path, 
+        static void writeTypeVector(SimpleZipWriter &zip, const std::string &path, 
                              std::vector<DataType> &values);
 
+    protected:
         /** function to write out one element of each rechit as a table of tables */
         template<typename DataType, typename Func>
         void writeRecHitsValues(SimpleZipWriter &zip, 
