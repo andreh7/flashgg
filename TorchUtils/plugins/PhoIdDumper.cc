@@ -7,6 +7,7 @@
 #include "flashgg/TorchUtils/interface/PhoIdWriterTorch.h"
 #include "flashgg/TorchUtils/interface/TrackWriterTorch.h"
 #include "flashgg/TorchUtils/interface/PhoIdWriterNumpy.h"
+#include "flashgg/TorchUtils/interface/TrackWriterNumpy.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -160,13 +161,15 @@ namespace flashgg {
                 phoIdInputVarsToken = consumes<flashgg::DiPhotonPhoIdMVAInputVarsAssociation>( iConfig.getParameter<InputTag> ( "photonIdInputVarsInputTag" ));
             }
 
-        if (boost::algorithm::ends_with(outputFname, ".npz"))
+        if (boost::algorithm::ends_with(outputFname, ".npz")) {
             phoIdWriter = new PhoIdWriterNumpy();
-        else
+            trackWriter = new TrackWriterNumpy(iConfig, consumesCollector());
+        } else  {
             // assume Torch output format
             phoIdWriter = new PhoIdWriterTorch();
-                
-        trackWriter = new TrackWriterTorch(iConfig, consumesCollector());
+            trackWriter = new TrackWriterTorch(iConfig, consumesCollector());
+        }
+
     }
 
     //----------------------------------------------------------------------

@@ -4,6 +4,8 @@
 #warning IMPLEMENT THIS
 // #include "flashgg/TorchUtils/interface/TrackWriterTorch.h"
 
+#include "flashgg/TorchUtils/interface/TrackWriterNumpy.h"
+
 #include <fstream>
 
 #include <boost/lexical_cast.hpp>
@@ -229,9 +231,12 @@ namespace flashgg
         //----------
 
 
-#warning IMPLEMENT HTIS
-        // tw.writeInt(tw.MAGIC_STRING); tw.writeString("tracks");      
-        //    dynamic_cast<TrackWriterNumpy*>(dumper.trackWriter)->writeOut(tw);
+        // TODO: come up with a nicer implementation 
+        //       but one of the problems is that for the Torch format
+        //       one needs to know beforehand how many elements
+        //       go into the top level struct
+
+        dynamic_cast<TrackWriterNumpy*>(dumper.trackWriter)->writeOut(zip);
     }
 
     //----------------------------------------------------------------------
