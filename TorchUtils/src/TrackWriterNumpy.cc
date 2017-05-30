@@ -15,17 +15,17 @@ namespace flashgg
         //----------
         // calculate first indices
         //----------
-        vector<int32_t> firstIndex(relpt.size()), numTracks(relpt.size());
+        vector<int32_t> firstIndex(trackpt.size()), numTracks(trackpt.size());
 
         // Torch's indexing is one based
         int32_t nextStartIndex = 1;
 
-        for (unsigned i = 0; i < relpt.size(); ++i)
+        for (unsigned i = 0; i < trackpt.size(); ++i)
             {
                 firstIndex[i] = nextStartIndex;
-                numTracks[i] = relpt[i].size();
+                numTracks[i] = trackpt[i].size();
       
-                nextStartIndex += relpt[i].size();
+                nextStartIndex += trackpt[i].size();
             } // loop over photons
 
         //----------
@@ -35,7 +35,7 @@ namespace flashgg
         PhoIdWriterNumpy::writeTypeVector(zip, "tracks/firstIndex", firstIndex);
         PhoIdWriterNumpy::writeTypeVector(zip, "tracks/numTracks", numTracks);
 
-        writeFlattenedVector(zip, "tracks/relpt", relpt, totNumTracks);
+        writeFlattenedVector(zip, "tracks/pt",          trackpt, totNumTracks);
         writeFlattenedVector(zip, "tracks/detaAtVertex",detaAtVertex, totNumTracks);
         writeFlattenedVector(zip, "tracks/dphiAtVertex",dphiAtVertex, totNumTracks);
         writeFlattenedVector(zip, "tracks/charge"      ,charge, totNumTracks);

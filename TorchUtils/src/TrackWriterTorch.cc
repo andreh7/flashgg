@@ -15,17 +15,17 @@ namespace flashgg
         //----------
         // calculate first indices
         //----------
-        vector<int32_t> firstIndex(relpt.size()), numTracks(relpt.size());
+        vector<int32_t> firstIndex(trackpt.size()), numTracks(trackpt.size());
 
         // Torch's indexing is one based
         int32_t nextStartIndex = 1;
 
-        for (unsigned i = 0; i < relpt.size(); ++i)
+        for (unsigned i = 0; i < trackpt.size(); ++i)
             {
                 firstIndex[i] = nextStartIndex;
-                numTracks[i] = relpt[i].size();
+                numTracks[i] = trackpt[i].size();
       
-                nextStartIndex += relpt[i].size();
+                nextStartIndex += trackpt[i].size();
             } // loop over photons
 
         //----------
@@ -43,7 +43,7 @@ namespace flashgg
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("numTracks");  tw.writeTypeVector(numTracks);
 
 
-        tw.writeInt(tw.MAGIC_STRING); tw.writeString("relpt"       ); writeFlattenedVector(tw,relpt, totNumTracks);
+        tw.writeInt(tw.MAGIC_STRING); tw.writeString("pt"          ); writeFlattenedVector(tw,trackpt, totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("detaAtVertex"); writeFlattenedVector(tw,detaAtVertex, totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("dphiAtVertex"); writeFlattenedVector(tw,dphiAtVertex, totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("charge"      ); writeFlattenedVector(tw,charge, totNumTracks);

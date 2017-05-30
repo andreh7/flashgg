@@ -46,7 +46,7 @@ namespace flashgg
     
 
     /** pt divided by photon et */
-    std::vector<std::vector<float> > relpt;
+    std::vector<std::vector<float> > trackpt;
     std::vector<std::vector<float> > detaAtVertex;
     std::vector<std::vector<float> > dphiAtVertex;
     std::vector<std::vector<int> >   charge;

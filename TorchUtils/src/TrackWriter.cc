@@ -33,7 +33,7 @@ namespace flashgg
     double photonPhi = photon.phi();
     double photonEt  = photon.et();
 
-    vector<float> relpt, detaAtVertex, dphiAtVertex;
+    vector<float> trackpt, detaAtVertex, dphiAtVertex;
     vector<int> charge;
 
     /** dz(track vertex - photon vertex) */
@@ -66,7 +66,7 @@ namespace flashgg
 	if (dr2 < maxDeltaR * maxDeltaR)
         {
 	  // keep this track for this photon
-	  relpt.push_back(track->pt() / photonEt);
+	  trackpt.push_back(track->pt());
 	  detaAtVertex.push_back(deta);
 	  dphiAtVertex.push_back(dphi);
 	  charge.push_back(track->charge());
@@ -78,7 +78,7 @@ namespace flashgg
       } // loop over tracks of this event
 
     // add this photon
-    this->relpt.push_back(relpt);
+    this->trackpt.push_back(trackpt);
     this->detaAtVertex.push_back(detaAtVertex);
     this->dphiAtVertex.push_back(dphiAtVertex);
     this->charge.push_back(charge);
