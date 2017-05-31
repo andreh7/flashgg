@@ -183,9 +183,10 @@ namespace flashgg
       tw.writeInt(tw.MAGIC_STRING); tw.writeString("phoVars");
       tw.writeInt(tw.MAGIC_TABLE);
       tw.writeInt(tw.getNextObjectIndex());
-      tw.writeInt(1); // number of variables
+      tw.writeInt(2); // number of variables
 
       tw.writeInt(tw.MAGIC_STRING); tw.writeString("phoEt"          );  tw.writeTypeVector(dumper.photonEt);
+      tw.writeInt(tw.MAGIC_STRING); tw.writeString("phoEta"          );  tw.writeTypeVector(dumper.photonEta);
     }
 
     //----------

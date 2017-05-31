@@ -86,6 +86,7 @@ namespace flashgg {
         // other photon variables
         //----------
         std::vector<float> photonEt;
+        std::vector<float> photonEta;  // note that this can be significantly different from scEta
         std::vector<float> photonPhi;
 
         // this is mostly for checking the correct

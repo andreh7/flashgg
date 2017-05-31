@@ -130,6 +130,7 @@ namespace flashgg {
 
                 // other photon variables
                 photonEt.push_back(photon.et());
+                photonEta.push_back(photon.eta());
                 photonPhi.push_back(photon.phi());
 
                 diphotonMass.push_back(diphoton.mass());

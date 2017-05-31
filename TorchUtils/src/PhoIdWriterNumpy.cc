@@ -224,6 +224,7 @@ namespace flashgg
         //----------
         {
             writeTypeVector(zip, "phoVars/phoEt",     dumper.photonEt);
+            writeTypeVector(zip, "phoVars/phoEta",    dumper.photonEta);
             writeTypeVector(zip, "phoVars/phoPhi",    dumper.photonPhi);
             writeTypeVector(zip, "phoVars/diphoMass", dumper.diphotonMass);
         }
