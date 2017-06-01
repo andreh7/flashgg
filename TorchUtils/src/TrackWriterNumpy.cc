@@ -39,7 +39,9 @@ namespace flashgg
         writeFlattenedVector(zip, "tracks/detaAtVertex",detaAtVertex, totNumTracks);
         writeFlattenedVector(zip, "tracks/dphiAtVertex",dphiAtVertex, totNumTracks);
         writeFlattenedVector(zip, "tracks/charge"      ,charge, totNumTracks);
-        writeFlattenedVector(zip, "tracks/vtxDz"       ,vtxDz,  totNumTracks);
+        writeFlattenedVector(zip, "tracks/vtxX"        ,vtxX,  totNumTracks);
+        writeFlattenedVector(zip, "tracks/vtxY"        ,vtxY,  totNumTracks);
+        writeFlattenedVector(zip, "tracks/vtxZ"        ,vtxZ,  totNumTracks);
     }
 
     //----------------------------------------------------------------------

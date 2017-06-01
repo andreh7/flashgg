@@ -51,8 +51,8 @@ namespace flashgg
     std::vector<std::vector<float> > dphiAtVertex;
     std::vector<std::vector<int> >   charge;
 
-    /** dz(track vertex - photon vertex) */
-    std::vector<std::vector<float> > vtxDz;
+    /** coordinates of vertex associated to track  */
+    std::vector<std::vector<float> > vtxX, vtxY, vtxZ;
 
     //----------------------------------------
 

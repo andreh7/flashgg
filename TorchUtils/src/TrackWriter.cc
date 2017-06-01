@@ -36,8 +36,8 @@ namespace flashgg
     vector<float> trackpt, detaAtVertex, dphiAtVertex;
     vector<int> charge;
 
-    /** dz(track vertex - photon vertex) */
-    vector<float> vtxDz;
+    /** coordinates of vertex associated to track  */
+    vector<float> vtxX, vtxY, vtxZ;
 
     // see https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/DataFormats/PatCandidates/interface/PackedCandidate.h
     // for PackedCandidate
@@ -72,7 +72,9 @@ namespace flashgg
 	  charge.push_back(track->charge());
 
 	  // track minus photon vertex
-	  vtxDz.push_back(cand.vertexRef()->z() - photonVertex->z());
+	  vtxX.push_back(cand.vertexRef()->x());
+	  vtxY.push_back(cand.vertexRef()->y());
+	  vtxZ.push_back(cand.vertexRef()->z());
         }
 
       } // loop over tracks of this event
@@ -82,8 +84,9 @@ namespace flashgg
     this->detaAtVertex.push_back(detaAtVertex);
     this->dphiAtVertex.push_back(dphiAtVertex);
     this->charge.push_back(charge);
-    this->vtxDz.push_back(vtxDz);
-
+    this->vtxX.push_back(vtxX);
+    this->vtxY.push_back(vtxY);
+    this->vtxZ.push_back(vtxZ);
   }
 
   //----------------------------------------------------------------------
