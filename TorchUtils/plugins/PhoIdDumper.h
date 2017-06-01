@@ -89,6 +89,15 @@ namespace flashgg {
         std::vector<float> photonEta;  // note that this can be significantly different from scEta
         std::vector<float> photonPhi;
 
+        // vertex position of the selected vertex
+        std::vector<float> photonVertexX, photonVertexY, photonVertexZ;
+        
+        // supercluster coordinates in cartesian coordinates
+        // (could in principle be derived from eta(SC), phi(SC)
+        // and Et(SC) but we store it directly in this
+        // format to be sure
+        std::vector<float> photonSCx, photonSCy, photonSCz;
+
         // this is mostly for checking the correct
         // cut was applied
         std::vector<float> diphotonMass;

@@ -133,6 +133,14 @@ namespace flashgg {
                 photonEta.push_back(photon.eta());
                 photonPhi.push_back(photon.phi());
 
+                photonVertexX.push_back(photon.vertex().x());
+                photonVertexY.push_back(photon.vertex().y());
+                photonVertexZ.push_back(photon.vertex().z());
+
+                photonSCx.push_back(photon.superCluster()->x());
+                photonSCy.push_back(photon.superCluster()->y());
+                photonSCz.push_back(photon.superCluster()->z());
+
                 diphotonMass.push_back(diphoton.mass());
 
                 // tracks
