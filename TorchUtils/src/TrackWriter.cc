@@ -49,13 +49,11 @@ namespace flashgg
 
 	// cout << "track=" << track << endl;
 
-	if (track == NULL)
-	  continue;
 
 	// deltaPhi(A,B) calculates phi(A) - phi(B) (modulo wrapping around)
 	// our 'reference' is the photon
-	double dphi = deltaPhi(track->phi(), photonPhi);
-	double deta = track->eta() - photonEta;
+	double dphi = deltaPhi(cand.phi(), photonPhi);
+	double deta = cand.eta() - photonEta;
 	double dr2 = dphi * dphi + deta * deta; 
 
 	// photonVertex.id() and cand.vertexRef().id() seem to be the same all the time but 
@@ -66,10 +64,10 @@ namespace flashgg
 	if (dr2 < maxDeltaR * maxDeltaR)
         {
 	  // keep this track for this photon
-	  trackpt.push_back(track->pt());
-	  charge.push_back(track->charge());
-	  etaAtVertex.push_back(track->eta());
-	  phiAtVertex.push_back(track->phi());
+	  trackpt.push_back(cand.pt());
+	  etaAtVertex.push_back(cand.eta());
+	  phiAtVertex.push_back(cand.phi());
+	  charge.push_back(cand.charge());
 	  pdgId.push_back(cand.pdgId());
 
 	  // track minus photon vertex
