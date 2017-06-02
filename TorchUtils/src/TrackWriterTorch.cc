@@ -33,7 +33,7 @@ namespace flashgg
         int32_t totNumTracks = nextStartIndex - 1;
 
         // number of tensors to write out
-        const unsigned tableSize = 7;
+        const unsigned tableSize = 10;
 
         tw.writeInt(tw.MAGIC_TABLE);
         tw.writeInt(tw.getNextObjectIndex());
@@ -47,6 +47,7 @@ namespace flashgg
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("detaAtVertex"); writeFlattenedVector(tw,detaAtVertex, totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("dphiAtVertex"); writeFlattenedVector(tw,dphiAtVertex, totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("charge"      ); writeFlattenedVector(tw,charge, totNumTracks);
+        tw.writeInt(tw.MAGIC_STRING); tw.writeString("pdgId"      ); writeFlattenedVector(tw,pdgId, totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("vtxZ"       );  writeFlattenedVector(tw,vtxX,  totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("vtxY"       ); writeFlattenedVector(tw,vtxY,  totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("vtxZ"       ); writeFlattenedVector(tw,vtxZ,  totNumTracks);

@@ -34,7 +34,7 @@ namespace flashgg
     double photonEt  = photon.et();
 
     vector<float> trackpt, detaAtVertex, dphiAtVertex;
-    vector<int> charge;
+    vector<int> charge, pdgId;
 
     /** coordinates of vertex associated to track  */
     vector<float> vtxX, vtxY, vtxZ;
@@ -70,6 +70,7 @@ namespace flashgg
 	  detaAtVertex.push_back(deta);
 	  dphiAtVertex.push_back(dphi);
 	  charge.push_back(track->charge());
+	  pdgId.push_back(cand.pdgId());
 
 	  // track minus photon vertex
 	  vtxX.push_back(cand.vertexRef()->x());
@@ -84,6 +85,7 @@ namespace flashgg
     this->detaAtVertex.push_back(detaAtVertex);
     this->dphiAtVertex.push_back(dphiAtVertex);
     this->charge.push_back(charge);
+    this->pdgId.push_back(pdgId);
     this->vtxX.push_back(vtxX);
     this->vtxY.push_back(vtxY);
     this->vtxZ.push_back(vtxZ);

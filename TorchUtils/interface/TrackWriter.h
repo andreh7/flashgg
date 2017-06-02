@@ -49,7 +49,7 @@ namespace flashgg
     std::vector<std::vector<float> > trackpt;
     std::vector<std::vector<float> > detaAtVertex;
     std::vector<std::vector<float> > dphiAtVertex;
-    std::vector<std::vector<int> >   charge;
+    std::vector<std::vector<int> >   charge, pdgId;
 
     /** coordinates of vertex associated to track  */
     std::vector<std::vector<float> > vtxX, vtxY, vtxZ;
