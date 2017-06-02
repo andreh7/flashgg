@@ -44,8 +44,8 @@ namespace flashgg
 
 
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("pt"          ); writeFlattenedVector(tw,trackpt, totNumTracks);
-        tw.writeInt(tw.MAGIC_STRING); tw.writeString("detaAtVertex"); writeFlattenedVector(tw,detaAtVertex, totNumTracks);
-        tw.writeInt(tw.MAGIC_STRING); tw.writeString("dphiAtVertex"); writeFlattenedVector(tw,dphiAtVertex, totNumTracks);
+        tw.writeInt(tw.MAGIC_STRING); tw.writeString("etaAtVertex");  writeFlattenedVector(tw,etaAtVertex, totNumTracks);
+        tw.writeInt(tw.MAGIC_STRING); tw.writeString("phiAtVertex");  writeFlattenedVector(tw,phiAtVertex, totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("charge"      ); writeFlattenedVector(tw,charge, totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("pdgId"      ); writeFlattenedVector(tw,pdgId, totNumTracks);
         tw.writeInt(tw.MAGIC_STRING); tw.writeString("vtxZ"       );  writeFlattenedVector(tw,vtxX,  totNumTracks);

@@ -36,8 +36,8 @@ namespace flashgg
         PhoIdWriterNumpy::writeTypeVector(zip, "tracks/numTracks", numTracks);
 
         writeFlattenedVector(zip, "tracks/pt",          trackpt, totNumTracks);
-        writeFlattenedVector(zip, "tracks/detaAtVertex",detaAtVertex, totNumTracks);
-        writeFlattenedVector(zip, "tracks/dphiAtVertex",dphiAtVertex, totNumTracks);
+        writeFlattenedVector(zip, "tracks/etaAtVertex", etaAtVertex, totNumTracks);
+        writeFlattenedVector(zip, "tracks/phiAtVertex", phiAtVertex, totNumTracks);
         writeFlattenedVector(zip, "tracks/charge"      ,charge, totNumTracks);
         writeFlattenedVector(zip, "tracks/pdgId"       ,pdgId, totNumTracks);
         writeFlattenedVector(zip, "tracks/vtxX"        ,vtxX,  totNumTracks);

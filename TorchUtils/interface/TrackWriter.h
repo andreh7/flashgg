@@ -47,8 +47,8 @@ namespace flashgg
 
     /** pt divided by photon et */
     std::vector<std::vector<float> > trackpt;
-    std::vector<std::vector<float> > detaAtVertex;
-    std::vector<std::vector<float> > dphiAtVertex;
+    std::vector<std::vector<float> > etaAtVertex;
+    std::vector<std::vector<float> > phiAtVertex;
     std::vector<std::vector<int> >   charge, pdgId;
 
     /** coordinates of vertex associated to track  */
