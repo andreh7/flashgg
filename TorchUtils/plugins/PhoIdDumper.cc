@@ -74,7 +74,8 @@ namespace flashgg {
                                 float chosenVertexChargedIso,
                                 float worstVertexChargedIso,
                                 const PhoIdMVAInputVars *phoIdInputVars,
-                                const flashgg::DiPhotonCandidate &diphoton
+                                const flashgg::DiPhotonCandidate &diphoton,
+                                const flashgg::VertexCandidateMap &vtxcandmap
                                 )
     {
         float label = photon.genMatchType() == flashgg::Photon::kPrompt ? 1 : 0;
@@ -161,8 +162,9 @@ namespace flashgg {
 
         writePhotonIdInputVarsFlag ( iConfig.getUntrackedParameter<bool>("writePhotonIdInputVars")),
 
-        normalizeRecHitsToMax ( iConfig.getUntrackedParameter<bool>("normalizeRecHitsToMax"))
+        normalizeRecHitsToMax ( iConfig.getUntrackedParameter<bool>("normalizeRecHitsToMax")),
         
+        vertexCandidateMapToken_( consumes<VertexCandidateMap>(InputTag("flashggVertexMapNonUnique")))
 
     {
         if (writePhotonIdInputVarsFlag)
@@ -201,6 +203,10 @@ namespace flashgg {
         if (writePhotonIdInputVarsFlag)
             iEvent.getByToken(phoIdInputVarsToken, phoIdInputVarsHandle);
 
+        Handle<VertexCandidateMap> vertexCandidateMap;
+        iEvent.getByToken( vertexCandidateMapToken_, vertexCandidateMap );
+        const flashgg::VertexCandidateMap vtxToCandMap = *( vertexCandidateMap.product() );
+
         trackWriter->newEvent(iEvent);
 
         //----------------------------------------
@@ -236,7 +242,8 @@ namespace flashgg {
                           diphoton->leadingView()->pfChIso03WrtChosenVtx(),
                           diphoton->leadingPhoton()->pfChgIsoWrtWorstVtx04(),
                           phoIdInputVarsLeading,
-                          *diphoton
+                          *diphoton,
+                          vtxToCandMap
                           );
                 addPhoton(iEvent.id(),
                           *diphoton->subLeadingPhoton(), 
@@ -246,7 +253,8 @@ namespace flashgg {
                           diphoton->subLeadingView()->pfChIso03WrtChosenVtx(),
                           diphoton->subLeadingPhoton()->pfChgIsoWrtWorstVtx04(),
                           phoIdInputVarsSubLeading,
-                          *diphoton
+                          *diphoton,
+                          vtxToCandMap
                           );
 
                 // only consider the first pair (how are they sorted ?)

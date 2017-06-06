@@ -13,6 +13,9 @@
 #include "flashgg/DataFormats/interface/DiPhotonPhoIdMVAInputVars.h"
 #include "flashgg/TorchUtils/interface/TrackWriter.h"
 
+#include "flashgg/DataFormats/interface/VertexCandidateMap.h"
+
+
 namespace flashgg {
     class PhoIdDumper : public edm::EDAnalyzer
     {
@@ -63,6 +66,8 @@ namespace flashgg {
 
         /** value map for diphoton input variables association */
         edm::EDGetTokenT<flashgg::DiPhotonPhoIdMVAInputVarsAssociation> phoIdInputVarsToken;
+
+        edm::EDGetTokenT<flashgg::VertexCandidateMap> vertexCandidateMapToken_;
 
         //----------
         // photon BDT id input variables
@@ -140,7 +145,8 @@ namespace flashgg {
                        float chosenVertexChargedIso,
                        float worstVertexChargedIso,
                        const PhoIdMVAInputVars *phoIdInputVars,
-                       const flashgg::DiPhotonCandidate &diphoton
+                       const flashgg::DiPhotonCandidate &diphoton,
+                       const flashgg::VertexCandidateMap &vtxcandmap
                        );
 
         friend class PhoIdWriterTorch;
