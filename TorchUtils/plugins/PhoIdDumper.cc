@@ -145,14 +145,15 @@ namespace flashgg {
                 diphotonMass.push_back(diphoton.mass());
 
                 // tracks
-                trackWriter->addPhoton(photon, photonVertex);
+                trackWriter->addPhoton(photon, photonVertex /*, isBarrel */);
                 
             }
     }
 
     //----------------------------------------------------------------------
 
-    PhoIdDumper::PhoIdDumper( const edm::ParameterSet &iConfig ):
+    PhoIdDumper::PhoIdDumper( const edm::ParameterSet &iConfig, bool isBarrel_):
+        isBarrel(isBarrel_),
         diphotonToken_( consumes<edm::View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "diphotonsInput" ) ) ),
 
         outputFname( iConfig.getUntrackedParameter<std::string>("output") ),
@@ -294,7 +295,7 @@ namespace flashgg {
     //----------------------------------------------------------------------
 
     PhoIdDumperBarrel::PhoIdDumperBarrel( const edm::ParameterSet &iParams) : 
-        PhoIdDumper(iParams)
+        PhoIdDumper(iParams, true)
     {
     }
 
@@ -353,7 +354,7 @@ namespace flashgg {
     //----------------------------------------------------------------------
 
     PhoIdDumperEndcap::PhoIdDumperEndcap( const edm::ParameterSet &iParams) : 
-        PhoIdDumper(iParams)
+        PhoIdDumper(iParams, false)
     {
     }
 

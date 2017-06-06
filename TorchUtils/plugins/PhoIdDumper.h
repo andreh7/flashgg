@@ -19,8 +19,9 @@
 namespace flashgg {
     class PhoIdDumper : public edm::EDAnalyzer
     {
+    protected:
+        explicit PhoIdDumper( const edm::ParameterSet & iParams, bool isBarrel_);
     public:
-        explicit PhoIdDumper( const edm::ParameterSet & );
         virtual ~PhoIdDumper();
 
         static void fillDescriptions( edm::ConfigurationDescriptions &descriptions );
@@ -31,6 +32,8 @@ namespace flashgg {
         virtual void beginJob() override;
         virtual void analyze( const edm::Event &, const edm::EventSetup & ) override;
         virtual void endJob() override;
+
+        const bool isBarrel;
 
         edm::EDGetTokenT<edm::View<flashgg::DiPhotonCandidate> > diphotonToken_;
 
