@@ -47,6 +47,8 @@ float PhotonIdUtils::pfIsoChgWrtVtx( const edm::Ptr<pat::Photon> &photon,
                                      float ptMin
                                    )
 {
+    std::cout << "CALCULATING ISOLATION" << std::endl;
+
     float isovalue = 0;
 
     float coneVeto = 0;
@@ -67,7 +69,9 @@ float PhotonIdUtils::pfIsoChgWrtVtx( const edm::Ptr<pat::Photon> &photon,
         if( abs( pfcand->pdgId() ) == 11 || abs( pfcand->pdgId() ) == 13 ) { continue; } //J. Tao not e/mu
         if( removeOverlappingCandidates_ &&
                 ( ( overlapAlgo_ == 0 &&  vetoPackedCand( *photon, pfcand ) ) ||
-                  ( overlapAlgo_ != 0 && ( *overlapAlgo_ )( *photon, pfcand ) ) ) ) { continue; }
+                  ( overlapAlgo_ != 0 && ( *overlapAlgo_ )( *photon, pfcand ) ) ) ) { 
+            std::cout << "SKIPPING ISO CANDIDATE WITH PT=" << pfcand->pt() << " BECAUSE OF OVERLAP" << std::endl;
+            continue; }
 
 
         if( pfcand->pt() < ptMin )         { continue; }
