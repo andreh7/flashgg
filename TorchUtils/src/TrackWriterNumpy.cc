@@ -43,6 +43,7 @@ namespace flashgg
         writeFlattenedVector(zip, "tracks/vtxX"        ,vtxX,  totNumTracks);
         writeFlattenedVector(zip, "tracks/vtxY"        ,vtxY,  totNumTracks);
         writeFlattenedVector(zip, "tracks/vtxZ"        ,vtxZ,  totNumTracks);
+        writeFlattenedVector(zip, "tracks/vtxIndex"    ,vtxIndex, totNumTracks);
     }
 
     //----------------------------------------------------------------------

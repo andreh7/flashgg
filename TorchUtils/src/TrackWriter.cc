@@ -58,6 +58,7 @@ namespace flashgg
 
     /** coordinates of vertex associated to track  */
     vector<float> vtxX, vtxY, vtxZ;
+    vector<unsigned> vtxIndex;
 
     // see https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/DataFormats/PatCandidates/interface/PackedCandidate.h
     // for PackedCandidate
@@ -105,6 +106,9 @@ namespace flashgg
 	  vtxX.push_back(cand.vertexRef()->x());
 	  vtxY.push_back(cand.vertexRef()->y());
 	  vtxZ.push_back(cand.vertexRef()->z());
+
+	  vtxIndex.push_back(vtx.key());
+
         }
 
       } // loop over tracks of this event
@@ -118,6 +122,7 @@ namespace flashgg
     this->vtxX.push_back(vtxX);
     this->vtxY.push_back(vtxY);
     this->vtxZ.push_back(vtxZ);
+    this->vtxIndex.push_back(vtxIndex);
   }
 
   //----------------------------------------------------------------------

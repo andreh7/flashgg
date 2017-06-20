@@ -53,6 +53,7 @@ namespace flashgg
 
     /** coordinates of vertex associated to track */
     std::vector<std::vector<float> > vtxX, vtxY, vtxZ;
+    std::vector<std::vector<unsigned> > vtxIndex;
 
     //----------------------------------------
 
