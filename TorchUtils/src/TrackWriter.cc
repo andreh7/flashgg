@@ -76,6 +76,14 @@ namespace flashgg
 	const edm::Ptr<reco::Vertex> vtx = vtxToTrackIter->first;
 	const edm::Ptr<pat::PackedCandidate> candPtr = vtxToTrackIter->second;
 
+#if 0
+	std::cout << "LOOKING AT TRACK WITH pt=" << candPtr->pt() 
+	  // note that we take the vertex to which the track was associated, NOT the track vertex
+		  << " VTXDZ=" << vtx->z() - photonVertex->z()
+		  << " VERTEX INDEX " << vtx.key()
+		  << std::endl;
+#endif
+
 	const pat::PackedCandidate &cand = *candPtr;
 
 	// skip candidate if it is part of the photon
