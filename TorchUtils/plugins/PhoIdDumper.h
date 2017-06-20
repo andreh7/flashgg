@@ -99,6 +99,7 @@ namespace flashgg {
 
         // vertex position of the selected vertex
         std::vector<float> photonVertexX, photonVertexY, photonVertexZ;
+        std::vector<unsigned> photonVertexIndex;
         
         // supercluster coordinates in cartesian coordinates
         // (could in principle be derived from eta(SC), phi(SC)

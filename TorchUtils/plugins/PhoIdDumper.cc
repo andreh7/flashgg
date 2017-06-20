@@ -137,6 +137,7 @@ namespace flashgg {
                 photonVertexX.push_back(photon.vertex().x());
                 photonVertexY.push_back(photon.vertex().y());
                 photonVertexZ.push_back(photon.vertex().z());
+                photonVertexIndex.push_back(photonVertex.key());
 
                 photonSCx.push_back(photon.superCluster()->x());
                 photonSCy.push_back(photon.superCluster()->y());
