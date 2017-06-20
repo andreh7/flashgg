@@ -69,6 +69,8 @@ namespace flashgg
 
     virtual ~TrackWriter();
 
+    static bool vetoPackedCand( const pat::Photon &photon, const edm::Ptr<pat::PackedCandidate> &pfcand );
+
   };
 }
 

@@ -3,6 +3,9 @@
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/Math/interface/deltaPhi.h"
 
+#include "DataFormats/Common/interface/RefToPtr.h"
+
+
 #include <iostream>
 
 using namespace std;
@@ -21,6 +24,21 @@ namespace flashgg
     this->event = &event;
   }
   //----------------------------------------------------------------------
+
+  /** copied from class PhotonIdUtils */
+  bool TrackWriter::vetoPackedCand( const pat::Photon &photon, const edm::Ptr<pat::PackedCandidate> &pfcand ) {
+        edm::RefVector<pat::PackedCandidateCollection> associated =  photon.associatedPackedPFCandidates();
+
+        for( unsigned int ipc = 0; ipc < associated.size(); ipc++ ) {
+            edm::Ptr<pat::PackedCandidate> associatedPtr = edm::refToPtr( associated[ipc] );
+            if( associatedPtr == pfcand )  { return true; }
+        }
+
+        return false;
+    }
+
+  //----------------------------------------
+
   void TrackWriter::addPhoton(const flashgg::Photon &photon, const edm::Ptr<reco::Vertex> &photonVertex)
   {
     edm::Handle<edm::View<pat::PackedCandidate> > patCandidates;
