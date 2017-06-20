@@ -63,6 +63,10 @@ namespace flashgg
     // see https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/DataFormats/PatCandidates/interface/PackedCandidate.h
     // for PackedCandidate
 
+    // keep track of tracks already added for this photon (we could add it again for
+    // another photon in the same event) but avoid adding it more than once
+    // because it was associated to more than one vertex
+    std::set<edm::Ptr<pat::PackedCandidate>> addedTracks;
 
     for (auto vtxToTrackIter = vtxcandmap.begin();
 	 vtxToTrackIter != vtxcandmap.end();
@@ -75,6 +79,10 @@ namespace flashgg
 	// to other vertices
 	const edm::Ptr<reco::Vertex> vtx = vtxToTrackIter->first;
 	const edm::Ptr<pat::PackedCandidate> candPtr = vtxToTrackIter->second;
+
+	if (addedTracks.find(candPtr) != addedTracks.end())
+	  // track already added because of another vertex
+	  continue;
 
 	const pat::PackedCandidate &cand = *candPtr;
 
@@ -109,6 +117,8 @@ namespace flashgg
 	  vtxZ.push_back(vtx->z());
 
 	  vtxIndex.push_back(vtx.key());
+
+	  addedTracks.insert(candPtr);
 
         }
 
