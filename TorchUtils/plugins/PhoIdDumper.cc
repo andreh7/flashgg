@@ -12,6 +12,12 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 
+#include "flashgg/MicroAOD/interface/PhotonIdUtils.h"
+
+#include "flashgg/TorchUtils/interface/TrackWriter.h"
+
+#define MYDEBUG
+
 using namespace std;
 using namespace edm;
 
@@ -67,6 +73,92 @@ namespace flashgg {
     }
 
     //----------------------------------------
+    
+
+    /** copy of PhotonIdUtils::pfIsoChgWrtVtx(..) but with slightly
+        different parameter types */
+    double pfIsoChgWrtVtx(const pat::Photon &photon,
+                          const edm::Ptr<reco::Vertex> vtx,
+                          const flashgg::VertexCandidateMap &vtxcandmap,
+                          float coneSize, float coneVetoBarrel, float coneVetoEndcap,
+                          float ptMin
+                          )
+    {
+        bool removeOverlappingCandidates_ = true;
+        OverlapRemovalAlgo *overlapAlgo_ = NULL;
+        double deltaPhiRotation_ = 0;
+
+        float isovalue = 0;
+
+        float coneVeto = 0;
+        if( photon.isEB() )      { coneVeto = coneVetoBarrel; }
+        else if( photon.isEE() ) { coneVeto = coneVetoEndcap; }
+
+
+        math::XYZVector SCdirection( photon.superCluster()->x() - vtx->x(),
+                                     photon.superCluster()->y() - vtx->y(),
+                                     photon.superCluster()->z() - vtx->z()
+                                     );
+
+        std::cout << "SELECTED VERTEX: " << vtx->z() 
+                  << " PHOTON ET=" << photon.et()
+                  << std::endl;
+        // std::cout << "VERTICES:" << std::endl;
+        // for (auto pp = vtxcandmap.begin(); pp != vtxcandmap.end(); ++pp) {
+        //     std::cout << "  vtx: " << pp->first->z() << std::endl;
+        // }
+
+        auto mapRange = std::equal_range( vtxcandmap.begin(), vtxcandmap.end(), vtx, flashgg::compare_with_vtx() );
+        if( mapRange.first == mapRange.second ) { 
+            std::cout << "SKIPPING ALL CANDIDATES BECAUSE NO VERTICES" << std::endl;
+            return -1.; } // no entries for this vertex
+        for( auto pair_iter = mapRange.first ; pair_iter != mapRange.second ; pair_iter++ ) {
+            edm::Ptr<pat::PackedCandidate> pfcand = pair_iter->second;
+
+            if( abs( pfcand->pdgId() ) == 11 || abs( pfcand->pdgId() ) == 13 ) { 
+                std::cout << "SKIPPING CANDIDATE WITH pt=" << pfcand->pt() << " BECAUSE OF PDGID" << std::endl;
+                continue; } //J. Tao not e/mu
+            if( removeOverlappingCandidates_ &&
+                ( ( overlapAlgo_ == 0 &&  TrackWriter::vetoPackedCand( photon, pfcand ) ) ||
+                  ( overlapAlgo_ != 0 && ( *overlapAlgo_ )( photon, pfcand ) ) ) ) { 
+                std::cout << "SKIPPING CANDIDATE WITH pt=" << pfcand->pt() << " BECAUSE OF OVERLAP" << std::endl;
+                continue; }
+
+
+            if( pfcand->pt() < ptMin )         { 
+                std::cout << "SKIPPING CANDIDATE WITH pt=" << pfcand->pt() << " BECAUSE OF MIN PT" << std::endl;
+                continue; 
+            }
+            float dRTkToVtx  = deltaR( pfcand->momentum().Eta(), pfcand->momentum().Phi(),
+                                       SCdirection.Eta(), SCdirection.Phi() + deltaPhiRotation_ ); // rotate SC in phi if requested (random cone isolation)
+            if( dRTkToVtx > coneSize) { 
+                std::cout << "SKIPPING CANDIDATE WITH"
+                          << " pt=" << pfcand->pt() 
+                          << " eta=" << pfcand->eta() 
+                          << " phi=" << pfcand->phi() 
+                          << " BECAUSE DELTAR=" << dRTkToVtx 
+                          << " OUTSIDE OUTER CONE OF " << coneSize 
+                          << " (DETA=" << fabs(pfcand->momentum().Eta() - SCdirection.Eta())
+                          << ", DPHI=" << deltaPhi(pfcand->momentum().Phi(), SCdirection.Phi() + deltaPhiRotation_)
+                          << ")"
+                          << std::endl;
+                continue; 
+            }
+
+            if( dRTkToVtx < coneVeto ) { 
+                std::cout << "SKIPPING CANDIDATE WITH pt=" << pfcand->pt() << " BECAUSE DELTAR=" << dRTkToVtx << " INSIDE INNER CONE OF " << coneVeto << std::endl;
+                continue; 
+            }
+
+            std::cout << "ACCEPTING CANDIDATE WITH pt=" << pfcand->pt() 
+                      << " VTXDZ=" << pfcand->vertex().z() - vtx->z() 
+                      << std::endl;
+
+            isovalue += pfcand->pt();
+        }
+        return isovalue;
+
+    }
 
     void PhoIdDumper::addPhoton(const edm::EventID &eventId, const flashgg::Photon &photon, 
                                 const edm::Ptr<reco::Vertex> &photonVertex,
@@ -86,6 +178,23 @@ namespace flashgg {
 
         if (isPhotonInSubdet(photon))
             {
+#ifdef MYDEBUG
+                {
+                    pfIsoChgWrtVtx(photon,
+                                   photonVertex,
+                                   vtxcandmap,
+                                   0.3, // coneSize
+                                   0.02, // coneVetoBarrel
+                                   0.02, // coneVetoEndcap
+                                   0.1 // ptMin
+                                   );
+                
+                }
+#endif
+
+
+
+
                 // photon is in the detector region (barrel/endcap) this instance works with
                 // TODO: do we need to check this ? We already check in the following function
                 //       for each rechit
@@ -127,6 +236,10 @@ namespace flashgg {
                         scEta           .push_back( phoIdInputVars->scEta           );
                         rho             .push_back( phoIdInputVars->rho             );
                         esEffSigmaRR    .push_back( phoIdInputVars->esEffSigmaRR    );
+
+#ifdef MYDEBUG
+                        std::cout << "pfChgIso03=" << pfChgIso03.back() << std::endl;
+#endif
                     }
 
                 // other photon variables
