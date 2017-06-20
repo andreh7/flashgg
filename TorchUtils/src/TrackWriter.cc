@@ -102,10 +102,11 @@ namespace flashgg
 	  charge.push_back(cand.charge());
 	  pdgId.push_back(cand.pdgId());
 
-	  // track minus photon vertex
-	  vtxX.push_back(cand.vertexRef()->x());
-	  vtxY.push_back(cand.vertexRef()->y());
-	  vtxZ.push_back(cand.vertexRef()->z());
+	  // note that we take the coordinates of the vertex to which the
+	  // track is associated, NOT the vertex returned by the track 
+	  vtxX.push_back(vtx->x());
+	  vtxY.push_back(vtx->y());
+	  vtxZ.push_back(vtx->z());
 
 	  vtxIndex.push_back(vtx.key());
 
