@@ -51,7 +51,7 @@ namespace flashgg
     std::vector<std::vector<float> > phiAtVertex;
     std::vector<std::vector<int> >   charge, pdgId;
 
-    /** coordinates of vertex associated to track  */
+    /** coordinates of vertex associated to track */
     std::vector<std::vector<float> > vtxX, vtxY, vtxZ;
 
     //----------------------------------------
