@@ -39,7 +39,9 @@ namespace flashgg
 
   //----------------------------------------
 
-  void TrackWriter::addPhoton(const flashgg::Photon &photon, const edm::Ptr<reco::Vertex> &photonVertex)
+  void TrackWriter::addPhoton(const flashgg::Photon &photon, const edm::Ptr<reco::Vertex> &photonVertex,
+			      const flashgg::VertexCandidateMap &vtxcandmap
+			      )
   {
     edm::Handle<edm::View<pat::PackedCandidate> > patCandidates;
     this->event->getByToken(packedCandidatesToken, patCandidates);
@@ -59,14 +61,25 @@ namespace flashgg
 
     // see https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/DataFormats/PatCandidates/interface/PackedCandidate.h
     // for PackedCandidate
-    for (const pat::PackedCandidate &cand : *patCandidates.product())
+
+
+    for (auto vtxToTrackIter = vtxcandmap.begin();
+	 vtxToTrackIter != vtxcandmap.end();
+	 ++vtxToTrackIter)
       {
-	// get the track
-	// see https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/DataFormats/TrackReco/interface/Track.h
-	const reco::Track *track = cand.bestTrack();
+	// note that here we do NOT require the vertex of 
+	// the track to be the same as the (selected) one
+	// of the photon since later we may also want
+	// to calculate the charged isolation with respect
+	// to other vertices
+	const edm::Ptr<reco::Vertex> vtx = vtxToTrackIter->first;
+	const edm::Ptr<pat::PackedCandidate> candPtr = vtxToTrackIter->second;
 
-	// cout << "track=" << track << endl;
+	const pat::PackedCandidate &cand = *candPtr;
 
+	// skip candidate if it is part of the photon
+	if (vetoPackedCand(photon, candPtr))
+	  continue;
 
 	// deltaPhi(A,B) calculates phi(A) - phi(B) (modulo wrapping around)
 	// our 'reference' is the photon

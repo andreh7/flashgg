@@ -145,7 +145,7 @@ namespace flashgg {
                 diphotonMass.push_back(diphoton.mass());
 
                 // tracks
-                trackWriter->addPhoton(photon, photonVertex /*, isBarrel */);
+                trackWriter->addPhoton(photon, photonVertex, vtxcandmap);
                 
             }
     }
