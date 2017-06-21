@@ -68,6 +68,26 @@ namespace flashgg {
 
     //----------------------------------------
 
+    std::vector<edm::Ptr<reco::Vertex> > PhoIdDumper::verticesOrderedByIsolation(const std::map<edm::Ptr<reco::Vertex>, float> &isomap) {
+
+        vector<edm::Ptr<reco::Vertex> > result(isomap.size());
+
+        unsigned pos = 0;
+        for (auto it : isomap) {
+            result[pos++] = it.first;
+        }
+        
+        std::sort(result.begin(), result.end(),
+                  [&](const edm::Ptr<reco::Vertex> &v1, const edm::Ptr<reco::Vertex>  &v2) -> bool {
+                      
+                      return isomap.at(v1) < isomap.at(v2);
+                  });
+        
+        return result;
+    }
+
+    //----------------------------------------
+
     void PhoIdDumper::addPhoton(const edm::EventID &eventId, const edm::Ptr<flashgg::Photon> &photon, 
                                 const edm::Ptr<reco::Vertex> &photonVertex,
                                 float weight, float mvaID,

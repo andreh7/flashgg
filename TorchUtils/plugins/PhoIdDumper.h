@@ -143,6 +143,9 @@ namespace flashgg {
         /** subdet specific: extract rechit coordinates */
         virtual void fillRecHits(const flashgg::Photon &photon, std::vector<PhoIdWriter::RecHitData> &rechits) = 0;
 
+        /** @return the vertices in order of ascending track isolation values */
+        static std::vector<edm::Ptr<reco::Vertex> > verticesOrderedByIsolation(const std::map<edm::Ptr<reco::Vertex>, float> &isomap);
+
         /** called to check if a photon is in barrel/endcap */
         virtual bool isPhotonInSubdet(const flashgg::Photon &photon) = 0;
 
