@@ -143,7 +143,7 @@ namespace flashgg {
         virtual bool isPhotonInSubdet(const flashgg::Photon &photon) = 0;
 
         void addPhoton(const edm::EventID &eventId, 
-                       const flashgg::Photon &photon, 
+                       const edm::Ptr<flashgg::Photon> &photon, 
                        const edm::Ptr<reco::Vertex> &photonVertex,
                        float weight, float mvaID,
                        float chosenVertexChargedIso,

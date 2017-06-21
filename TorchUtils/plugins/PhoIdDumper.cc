@@ -68,7 +68,7 @@ namespace flashgg {
 
     //----------------------------------------
 
-    void PhoIdDumper::addPhoton(const edm::EventID &eventId, const flashgg::Photon &photon, 
+    void PhoIdDumper::addPhoton(const edm::EventID &eventId, const edm::Ptr<flashgg::Photon> &photon, 
                                 const edm::Ptr<reco::Vertex> &photonVertex,
                                 float weight, float mvaID,
                                 float chosenVertexChargedIso,
@@ -78,18 +78,18 @@ namespace flashgg {
                                 const flashgg::VertexCandidateMap &vtxcandmap
                                 )
     {
-        float label = photon.genMatchType() == flashgg::Photon::kPrompt ? 1 : 0;
+        float label = photon->genMatchType() == flashgg::Photon::kPrompt ? 1 : 0;
 
-        float genDeltaR = photon.genDeltaR();
+        float genDeltaR = photon->genDeltaR();
 
         std::vector<PhoIdWriter::RecHitData> rechits;
 
-        if (isPhotonInSubdet(photon))
+        if (isPhotonInSubdet(*photon))
             {
                 // photon is in the detector region (barrel/endcap) this instance works with
                 // TODO: do we need to check this ? We already check in the following function
                 //       for each rechit
-                fillRecHits(photon, rechits);
+                fillRecHits(*photon, rechits);
                 applyWindowAndNormalizeEnergy(rechits, windowHalfWidth, windowHalfHeight, normalizeRecHitsToMax);
 
                 // ignore 'empty' photons for the moment
@@ -130,22 +130,23 @@ namespace flashgg {
                     }
 
                 // other photon variables
-                photonEt.push_back(photon.et());
-                photonEta.push_back(photon.eta());
-                photonPhi.push_back(photon.phi());
+                photonEt.push_back(photon->et());
+                photonEta.push_back(photon->eta());
+                photonPhi.push_back(photon->phi());
 
-                photonVertexX.push_back(photon.vertex().x());
-                photonVertexY.push_back(photon.vertex().y());
-                photonVertexZ.push_back(photon.vertex().z());
+                photonVertexX.push_back(photon->vertex().x());
+                photonVertexY.push_back(photon->vertex().y());
+                photonVertexZ.push_back(photon->vertex().z());
                 photonVertexIndex.push_back(photonVertex.key());
 
-                photonSCx.push_back(photon.superCluster()->x());
-                photonSCy.push_back(photon.superCluster()->y());
-                photonSCz.push_back(photon.superCluster()->z());
+                photonSCx.push_back(photon->superCluster()->x());
+                photonSCy.push_back(photon->superCluster()->y());
+                photonSCz.push_back(photon->superCluster()->z());
 
                 diphotonMass.push_back(diphoton.mass());
 
                 // tracks
+                
                 trackWriter->addPhoton(photon, photonVertex, vtxcandmap);
                 
             }
@@ -237,7 +238,7 @@ namespace flashgg {
                     }
 
                 addPhoton(iEvent.id(),
-                          *diphoton->leadingPhoton(), 
+                          diphoton->leadingView()->originalPhoton(),
                           diphoton->vtx(),
                           weight, 
                           diphoton->leadingView()->phoIdMvaWrtChosenVtx(),
@@ -248,7 +249,7 @@ namespace flashgg {
                           vtxToCandMap
                           );
                 addPhoton(iEvent.id(),
-                          *diphoton->subLeadingPhoton(), 
+                          diphoton->subLeadingView()->originalPhoton(), 
                           diphoton->vtx(), 
                           weight, 
                           diphoton->subLeadingView()->phoIdMvaWrtChosenVtx(),
