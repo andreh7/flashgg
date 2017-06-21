@@ -72,6 +72,10 @@ namespace flashgg {
 
         edm::EDGetTokenT<flashgg::VertexCandidateMap> vertexCandidateMapToken_;
 
+        edm::EDGetTokenT<edm::View<reco::Vertex> > vertexToken_;
+
+        edm::Handle<edm::View<reco::Vertex> > vertices;
+
         //----------
         // photon BDT id input variables
         //----------

@@ -167,8 +167,8 @@ namespace flashgg {
 
         normalizeRecHitsToMax ( iConfig.getUntrackedParameter<bool>("normalizeRecHitsToMax")),
         
-        vertexCandidateMapToken_( consumes<VertexCandidateMap>(InputTag("flashggVertexMapNonUnique")))
-
+        vertexCandidateMapToken_( consumes<VertexCandidateMap>(InputTag("flashggVertexMapNonUnique"))),
+        vertexToken_(consumes<edm::View<reco::Vertex> >(edm::InputTag( "offlineSlimmedPrimaryVertices" )))
     {
         if (writePhotonIdInputVarsFlag)
             {
@@ -209,6 +209,8 @@ namespace flashgg {
         Handle<VertexCandidateMap> vertexCandidateMap;
         iEvent.getByToken( vertexCandidateMapToken_, vertexCandidateMap );
         const flashgg::VertexCandidateMap vtxToCandMap = *( vertexCandidateMap.product() );
+
+        iEvent.getByToken( vertexToken_, vertices );
 
         trackWriter->newEvent(iEvent);
 
