@@ -39,7 +39,7 @@ namespace flashgg
 
   //----------------------------------------
 
-  void TrackWriter::addPhoton(const flashgg::Photon &photon, const edm::Ptr<reco::Vertex> &photonVertex,
+  void TrackWriter::addPhoton(const edm::Ptr<pat::Photon> &photon, const edm::Ptr<reco::Vertex> &photonVertex,
 			      const flashgg::VertexCandidateMap &vtxcandmap
 			      )
   {
@@ -49,9 +49,9 @@ namespace flashgg
     // find tracks in a cone of dR (e.g. = 0.3) around this photon
     // vector<pat::PackedCandidate>          "packedPFCandidates"        ""                "PAT"
     
-    double photonEta = photon.eta(); 
-    double photonPhi = photon.phi();
-    double photonEt  = photon.et();
+    double photonEta = photon->eta(); 
+    double photonPhi = photon->phi();
+    double photonEt  = photon->et();
 
     vector<float> trackpt, etaAtVertex, phiAtVertex;
     vector<int> charge, pdgId;
@@ -79,7 +79,7 @@ namespace flashgg
 	const pat::PackedCandidate &cand = *candPtr;
 
 	// skip candidate if it is part of the photon
-	if (vetoPackedCand(photon, candPtr))
+	if (vetoPackedCand(*photon, candPtr))
 	  continue;
 
 	// deltaPhi(A,B) calculates phi(A) - phi(B) (modulo wrapping around)

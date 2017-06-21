@@ -66,7 +66,7 @@ namespace flashgg
     void newEvent(const edm::Event &event);
     
     /** finds tracks close to this photon and stores the corresponding data */
-    void addPhoton(const flashgg::Photon &photon, const edm::Ptr<reco::Vertex> &photonVertex,
+    void addPhoton(const edm::Ptr<pat::Photon> &photon, const edm::Ptr<reco::Vertex> &photonVertex,
 		   const flashgg::VertexCandidateMap &vtxcandmap);
 
     virtual ~TrackWriter();
