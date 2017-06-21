@@ -15,6 +15,8 @@
 
 #include "flashgg/DataFormats/interface/VertexCandidateMap.h"
 
+#include "flashgg/MicroAOD/interface/PhotonIdUtils.h"
+
 
 namespace flashgg {
     class PhoIdDumper : public edm::EDAnalyzer
@@ -76,6 +78,9 @@ namespace flashgg {
 
         edm::Handle<edm::View<reco::Vertex> > vertices;
 
+        /** for calculating charged isolation w.r.t different vertices */
+        PhotonIdUtils phoTools_;
+
         //----------
         // photon BDT id input variables
         //----------
@@ -103,8 +108,14 @@ namespace flashgg {
 
         // vertex position of the selected vertex
         std::vector<float> photonVertexX, photonVertexY, photonVertexZ;
+
+        /** photon selected vertex */
         std::vector<unsigned> photonVertexIndex;
         
+        /** note that these are ints because if we have not enough vertices,
+            we store a negative value (e.g. -1) */
+        std::vector<int> photonWorstIsoVertexIndex, photonSecondWorstIsoVertexIndex;
+
         // supercluster coordinates in cartesian coordinates
         // (could in principle be derived from eta(SC), phi(SC)
         // and Et(SC) but we store it directly in this

@@ -169,6 +169,38 @@ namespace flashgg {
                 
                 trackWriter->addPhoton(photon, photonVertex, vtxcandmap);
                 
+
+                // find worst and second worst etc. vertices (from the track
+                // isolation point of view)
+                {
+                    std::map<edm::Ptr<reco::Vertex>, float> isomap03 = phoTools_.pfIsoChgWrtAllVtx(photon, 
+                                                                                                   vertices->ptrs(), 
+                                                                                                   vtxcandmap, 
+                                                                                                   0.3,  // outer cone size
+                                                                                                   0.02, // inner veto cone size barrel
+                                                                                                   0.02, // inner veto cone size endcap
+                                                                                                   0.1   // min track pt
+                                                                                                   );
+                    
+                    
+                    // sort vertices in ascending order of the charged isolation
+                    vector<edm::Ptr<reco::Vertex> > sortedVertices = verticesOrderedByIsolation(isomap03);
+                    
+                    int worstVertexIndex = -1;
+                    int secondWorstVertexIndex = -1;
+
+                    if (sortedVertices.size() >= 1) {
+                        worstVertexIndex = sortedVertices.back().key();
+
+                        if (sortedVertices.size() >= 2) {
+                            secondWorstVertexIndex = sortedVertices[sortedVertices.size() - 2].key();
+                        }
+                    }
+
+                    photonWorstIsoVertexIndex.push_back(worstVertexIndex);
+                    photonSecondWorstIsoVertexIndex.push_back(secondWorstVertexIndex);
+
+                }
             }
     }
 
