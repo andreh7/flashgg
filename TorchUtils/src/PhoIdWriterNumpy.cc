@@ -232,6 +232,9 @@ namespace flashgg
             writeTypeVector(zip, "phoVars/phoVertexZ", dumper.photonVertexZ);
             writeTypeVector(zip, "phoVars/phoVertexIndex", dumper.photonVertexIndex);
 
+            writeTypeVector(zip, "phoVars/phoWorstIsoVertexIndex", dumper.photonWorstIsoVertexIndex);
+            writeTypeVector(zip, "phoVars/phoSecondWorstIsoVertexIndex", dumper.photonSecondWorstIsoVertexIndex);
+
             writeTypeVector(zip, "phoVars/scX", dumper.photonSCx);
             writeTypeVector(zip, "phoVars/scY", dumper.photonSCy);
             writeTypeVector(zip, "phoVars/scZ", dumper.photonSCz);
