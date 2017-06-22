@@ -219,7 +219,7 @@ namespace flashgg {
 
         normalizeRecHitsToMax ( iConfig.getUntrackedParameter<bool>("normalizeRecHitsToMax")),
         
-        vertexCandidateMapToken_( consumes<VertexCandidateMap>(InputTag("flashggVertexMapNonUnique"))),
+        vertexCandidateMapToken_( consumes<VertexCandidateMap>(iConfig.getParameter<InputTag>("vertexCandidateMapTag"))),
         vertexToken_(consumes<edm::View<reco::Vertex> >(edm::InputTag( "offlineSlimmedPrimaryVertices" )))
     {
         if (writePhotonIdInputVarsFlag)

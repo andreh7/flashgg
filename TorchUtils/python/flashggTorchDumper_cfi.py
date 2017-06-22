@@ -13,6 +13,8 @@ flashggTorchDumperBarrel = cms.EDAnalyzer('FlashggPhoIdDumperBarrel',
                                           writePhotonIdInputVars = cms.untracked.bool(True),
 
                                           normalizeRecHitsToMax = cms.untracked.bool(False),
+
+                                          vertexCandidateMapTag = cms.InputTag("flashggVertexMapNonUnique"),
                                           )
 
 flashggTorchDumperEndcap = cms.EDAnalyzer('FlashggPhoIdDumperEndcap',
@@ -28,4 +30,6 @@ flashggTorchDumperEndcap = cms.EDAnalyzer('FlashggPhoIdDumperEndcap',
                                           writePhotonIdInputVars = cms.untracked.bool(True),
 
                                           normalizeRecHitsToMax = cms.untracked.bool(False),
+
+                                          vertexCandidateMapTag = cms.InputTag("flashggVertexMapNonUnique"),
                                           )
