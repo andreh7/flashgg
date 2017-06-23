@@ -268,6 +268,9 @@ namespace flashgg {
 
         //----------------------------------------
 
+        // make sure the edm::Ref is not destroyed after the 'if' body
+        std::vector<edm::Ptr<flashgg::DiPhotonCandidate>> diphotonPointers = diphotons->ptrs();
+
         unsigned diphotonIndex = 0;
         for ( auto diphoton = diphotons.product()->begin(); diphoton != diphotons.product()->end(); ++diphoton, ++diphotonIndex)
             {
@@ -276,9 +279,6 @@ namespace flashgg {
                 float weight = diphoton->centralWeight();
 
                 const PhoIdMVAInputVars *phoIdInputVarsLeading = NULL, *phoIdInputVarsSubLeading = NULL;
-
-                // make sure the edm::Ref is not destroyed after the 'if' body
-                std::vector<edm::Ptr<flashgg::DiPhotonCandidate>> diphotonPointers = diphotons->ptrs();
 
                 if (writePhotonIdInputVarsFlag)
                     {
