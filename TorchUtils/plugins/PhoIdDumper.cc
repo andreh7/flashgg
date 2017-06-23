@@ -297,7 +297,7 @@ namespace flashgg {
                           weight, 
                           diphoton->leadingView()->phoIdMvaWrtChosenVtx(),
                           diphoton->leadingView()->pfChIso03WrtChosenVtx(),
-                          diphoton->leadingPhoton()->pfChgIsoWrtWorstVtx04(),
+                          diphoton->leadingPhoton()->pfChgIsoWrtWorstVtx03(),
                           phoIdInputVarsLeading,
                           *diphoton,
                           vtxToCandMap
@@ -308,7 +308,7 @@ namespace flashgg {
                           weight, 
                           diphoton->subLeadingView()->phoIdMvaWrtChosenVtx(),
                           diphoton->subLeadingView()->pfChIso03WrtChosenVtx(),
-                          diphoton->subLeadingPhoton()->pfChgIsoWrtWorstVtx04(),
+                          diphoton->subLeadingPhoton()->pfChgIsoWrtWorstVtx03(),
                           phoIdInputVarsSubLeading,
                           *diphoton,
                           vtxToCandMap
