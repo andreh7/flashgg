@@ -271,9 +271,10 @@ namespace flashgg {
         // make sure the edm::Ref is not destroyed after the 'if' body
         std::vector<edm::Ptr<flashgg::DiPhotonCandidate>> diphotonPointers = diphotons->ptrs();
 
-        unsigned diphotonIndex = 0;
-        for ( auto diphoton = diphotons.product()->begin(); diphoton != diphotons.product()->end(); ++diphoton, ++diphotonIndex)
+        for (unsigned diphotonIndex = 0; diphotonIndex < diphotonPointers.size(); ++diphotonIndex)
             {
+                edm::Ptr<flashgg::DiPhotonCandidate> diphoton = diphotonPointers[diphotonIndex];
+
                 // TODO: should we take the square root of the event weight for photons ?
                 // TODO: check if this corresponds to the final event weight ?!
                 float weight = diphoton->centralWeight();
