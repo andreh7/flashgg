@@ -189,11 +189,31 @@ namespace flashgg {
                     int worstVertexIndex = -1;
                     int secondWorstVertexIndex = -1;
 
+                    // cout << "ORDERED VERTEX ISOS:";
+                    // for (unsigned i = 0; i < sortedVertices.size(); ++i) {
+                    //     cout << " " << isomap03.at(sortedVertices[i]);
+                    // }
+                    // cout << endl;
+
+                    
+//                    cout << "SELECTED ISO microaod:" << chosenVertexChargedIso
+//                         << "/" << phoIdInputVars->pfChgIso03 << " recalculated:" << isomap03.at(photonVertex) 
+//                         << endl;
+
+
                     if (sortedVertices.size() >= 1) {
                         worstVertexIndex = sortedVertices.back().key();
 
+
+                        if (worstVertexChargedIso != isomap03.at(sortedVertices.back())) {
+                                cout << "WORST ISO flashgg: microaod:" << worstVertexChargedIso << "/" << phoIdInputVars->pfChgIso03worst << " recalculated: " << isomap03.at(sortedVertices.back()) << endl;
+
+                            }
+                            
+
                         if (sortedVertices.size() >= 2) {
                             secondWorstVertexIndex = sortedVertices[sortedVertices.size() - 2].key();
+                        //     cout << "SECOND WORST: " << isomap03.at(sortedVertices[sortedVertices.size() - 2]) << endl;
                         }
                     }
 
