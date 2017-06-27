@@ -8,6 +8,8 @@
 #include "flashgg/TorchUtils/interface/TrackWriterTorch.h"
 #include "flashgg/TorchUtils/interface/PhoIdWriterNumpy.h"
 #include "flashgg/TorchUtils/interface/TrackWriterNumpy.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+
 
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -21,13 +23,13 @@ namespace flashgg {
 
     //----------------------------------------------------------------------
 
-    void PhoIdDumper::applyWindowAndNormalizeEnergy(std::vector<PhoIdWriter::RecHitData> &rechits, int windowHalfWidth, int windowHalfHeight, bool normalizeRecHitsToMax)
+    void PhoIdDumper::applyWindowAndNormalizeEnergy(std::vector<PhoIdWriter::RecHitData> &rechits, unsigned &maxIndex, int windowHalfWidth, int windowHalfHeight, bool normalizeRecHitsToMax)
     {
         if (rechits.size() < 1)
             return;
 
         // find maximum energy rechit
-        unsigned maxIndex = 0;
+        maxIndex = 0;
 
         for (unsigned i = 1; i < rechits.size(); ++i)
             if (rechits[i].energy > rechits[maxIndex].energy)
@@ -110,11 +112,21 @@ namespace flashgg {
                 // TODO: do we need to check this ? We already check in the following function
                 //       for each rechit
                 fillRecHits(*photon, rechits);
-                applyWindowAndNormalizeEnergy(rechits, windowHalfWidth, windowHalfHeight, normalizeRecHitsToMax);
+
+                unsigned maxRechitIndex;
+
+                applyWindowAndNormalizeEnergy(rechits, maxRechitIndex, windowHalfWidth, windowHalfHeight, normalizeRecHitsToMax);
 
                 // ignore 'empty' photons for the moment
                 if (rechits.size() < 1)
                     return;
+
+                {
+                    // fill eta and phi coordinates of maximum (central) rechit
+                    GlobalPoint recHitPos = caloGeometry->getPosition(rechits[maxRechitIndex].detid);
+                    maxRecHitEta.push_back(recHitPos.eta());
+                    maxRecHitPhi.push_back(recHitPos.phi());
+                }
 
                 // event identification
                 this->runNumber.push_back(eventId.run());
@@ -264,6 +276,11 @@ namespace flashgg {
 
         iEvent.getByToken( vertexToken_, vertices );
 
+        // get geometry
+        edm::ESHandle<CaloGeometry> geometryHandle;
+        iSetup.get<CaloGeometryRecord>().get(geometryHandle);
+        caloGeometry = geometryHandle.product();
+
         trackWriter->newEvent(iEvent);
 
         //----------------------------------------
@@ -386,6 +403,8 @@ namespace flashgg {
                 data.dx = dt.ieta();
                 data.dy = dt.iphi();
 
+                data.detid = rechit.detid();
+
                 // eta goes from -85 to -1 then jumps to +1 to +85
                 // (i.e. there is no zero..)
                 if (data.dx < 0)
@@ -440,6 +459,8 @@ namespace flashgg {
                 data.energy = rechit.energy();
                 data.dx = dt.ix();
                 data.dy = dt.iy();
+
+                data.detid = rechit.detid();
 
                 rechits.push_back(data);
 

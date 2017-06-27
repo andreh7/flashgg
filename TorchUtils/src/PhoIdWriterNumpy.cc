@@ -239,6 +239,9 @@ namespace flashgg
             writeTypeVector(zip, "phoVars/scY", dumper.photonSCy);
             writeTypeVector(zip, "phoVars/scZ", dumper.photonSCz);
 
+            writeTypeVector(zip, "phoVars/maxRecHitEta", dumper.maxRecHitEta);
+            writeTypeVector(zip, "phoVars/maxRecHitPhi", dumper.maxRecHitPhi);
+
             writeTypeVector(zip, "phoVars/diphoMass", dumper.diphotonMass);
         }
 

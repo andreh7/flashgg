@@ -17,6 +17,7 @@
 
 #include "flashgg/MicroAOD/interface/PhotonIdUtils.h"
 
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 
 namespace flashgg {
     class PhoIdDumper : public edm::EDAnalyzer
@@ -81,6 +82,9 @@ namespace flashgg {
         /** for calculating charged isolation w.r.t different vertices */
         PhotonIdUtils phoTools_;
 
+        /** calorimeter geometry corresponding to the current event */
+        const CaloGeometry *caloGeometry;
+
         //----------
         // photon BDT id input variables
         //----------
@@ -122,6 +126,9 @@ namespace flashgg {
         // format to be sure
         std::vector<float> photonSCx, photonSCy, photonSCz;
 
+        // eta and phi coordinates for highest energy rechit
+        std::vector<float> maxRecHitEta, maxRecHitPhi;
+
         // this is mostly for checking the correct
         // cut was applied
         std::vector<float> diphotonMass;
@@ -147,7 +154,7 @@ namespace flashgg {
             @param normalizeToMax if true (used at the beginning), divide all rechit energies by the energy of the maximum rechit
             (the value stored for the maximum rechit will be one unless all rechits had energies <= 0)
         */
-        void applyWindowAndNormalizeEnergy(std::vector<PhoIdWriter::RecHitData> &rechits, int windowHalfWidth, int windowHalfHeight, bool normalizeToMax);
+        void applyWindowAndNormalizeEnergy(std::vector<PhoIdWriter::RecHitData> &rechits, unsigned &maxIndex, int windowHalfWidth, int windowHalfHeight, bool normalizeToMax);
 
         //----------------------------------------
 

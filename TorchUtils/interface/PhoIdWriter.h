@@ -1,6 +1,8 @@
 #ifndef TorchUtils_PhoIdWriter_h
 #define TorchUtils_PhoIdWriter_h
 
+#include "DataFormats/DetId/interface/DetId.h"
+
 #include <string>
 
 namespace flashgg
@@ -19,6 +21,8 @@ namespace flashgg
       float energy;
       int dx; // eta in the barrel
       int dy; // phi in the barrel
+
+      DetId detid;
     };
 
   };
