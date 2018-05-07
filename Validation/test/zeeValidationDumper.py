@@ -145,6 +145,8 @@ for varPrefix, photon, view in (('lead', 'leadingPhoton', 'leadingView'),
                 "{varPrefix}esEnovSCRawEn     := {photon}.superCluster.preshowerEnergy()/{photon}.superCluster.rawEnergy()",
                 "{varPrefix}sigmaEoE          := {photon}.sigEOverE",
                 "{varPrefix}ScEta             := {photon}.superCluster.eta",
+                "{varPrefix}EsEffSigmaRR      := {photon}.esEffSigmaRR",
+                "{varPrefix}EsEnergyOverRawE  := {photon}.superCluster.preshowerEnergy/{photon}.superCluster.rawEnergy",
                 ]
             ])
 
