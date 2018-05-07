@@ -104,6 +104,59 @@ cfgTools.addCategories(process.DiPhotonWithZeeMVADumper,
 # split tree, histogram and datasets by process
 process.DiPhotonWithZeeMVADumper.nameTemplate ="zeevalidation_$SQRTS_$LABEL_$SUBCAT"
 
+#----------
+# list of variables to dump
+#----------
+
+variables = []
+
+# per-photon variables
+for varPrefix, photon, view in (('lead', 'leadingPhoton', 'leadingView'),
+                                ('sublead', 'subLeadingPhoton', 'subLeadingView')):
+
+    variables.extend([
+            line.format(varPrefix = varPrefix, photon = photon, view = view)
+            for line in [
+                "{varPrefix}HoE               := {photon}.hadronicOverEm",
+                "{varPrefix}TrkIso            := {photon}.trkSumPtHollowConeDR03",
+                "{varPrefix}PhIso             := {photon}.pfPhoIso03",
+                "{varPrefix}PhIsoCorr         := {photon}.pfPhoIso03Corr",
+                "{varPrefix}NeuIso            := {photon}.pfNeutIso03",
+                "{varPrefix}full5x5r9         := {photon}.full5x5_r9",
+                "{varPrefix}full5x5sieie      := {photon}.full5x5_sigmaIetaIeta",
+                "{varPrefix}full5x5covieip    := {photon}.sieip",
+                "{varPrefix}full5x5covipip    := {photon}.sipip",
+                "{varPrefix}etawidth          := {photon}.superCluster.etaWidth",
+                "{varPrefix}phiwidth          := {photon}.superCluster.phiWidth",
+                "{varPrefix}s4ratio           := {photon}.s4",
+                "{varPrefix}oldr9             := {photon}.old_r9",
+                "{varPrefix}oldsieie          := {photon}.sigmaIetaIeta",
+                "{varPrefix}oldcovieip        := {photon}.showerShapeVariables.sigmaIetaIphi",
+                "{varPrefix}oldcovipip        := {photon}.showerShapeVariables.sigmaIphiIphi",
+                "{varPrefix}r9_5x5_by_3x3     := {photon}.full5x5_r9/{photon}.old_r9",
+                "{varPrefix}Pt                := {photon}.et",
+                "{varPrefix}Eta               := {photon}.eta",
+                "{varPrefix}IDMVA             := {view}.phoIdMvaWrtChosenVtx",
+                "{varPrefix}ChIsoRv           := {view}.pfChIso03WrtChosenVtx",
+                "{varPrefix}ChIsoWv           := {photon}.pfChgIsoWrtWorstVtx03",
+                "{varPrefix}ESSigma           := {photon}.esEffSigmaRR",
+                "{varPrefix}ScRawE            := {photon}.superCluster.rawEnergy",
+                "{varPrefix}esE               := {photon}.superCluster.preshowerEnergy",
+                "{varPrefix}esEnovSCRawEn     := {photon}.superCluster.preshowerEnergy()/{photon}.superCluster.rawEnergy()",
+                "{varPrefix}sigmaEoE          := {photon}.sigEOverE",
+                "{varPrefix}ScEta             := {photon}.superCluster.eta",
+                ]
+            ])
+
+# add event-wide variables
+variables += [
+    "mass[120,60,120]      := mass",
+    "sigmaMoM              := .5*sqrt(leadingPhoton.sigEOverE*leadingPhoton.sigEOverE+subLeadingPhoton.sigEOverE*subLeadingPhoton.sigEOverE)",
+    "vtxProb               := vtxProbMVA",
+    "cosdphi               := cos(leadingPhoton.phi-subLeadingPhoton.phi)",
+    "dipho_pt              := pt",
+    "nVtx                  := nVert",
+    ]
 
 cfgTools.addCategories(process.diphotonDumper,
                        ## categories definition
@@ -112,68 +165,7 @@ cfgTools.addCategories(process.diphotonDumper,
                         #("EB", "abs(superCluster.eta)<1.479", 0),
                         #("EE", "abs(superCluster.eta)>1.566",0)
                         ],
-                       variables=["leadHoE               := leadingPhoton.hadronicOverEm",
-                                  "leadTrkIso            := leadingPhoton.trkSumPtHollowConeDR03",
-                                  "leadPhIso             := leadingPhoton.pfPhoIso03",
-                                  "leadPhIsoCorr         := leadingPhoton.pfPhoIso03Corr",
-                                  "leadNeuIso            := leadingPhoton.pfNeutIso03",
-                                  "leadfull5x5r9         := leadingPhoton.full5x5_r9",
-                                  "leadfull5x5sieie      := leadingPhoton.full5x5_sigmaIetaIeta",
-                                  "leadfull5x5covieip    := leadingPhoton.sieip",
-                                  "leadfull5x5covipip    := leadingPhoton.sipip",
-                                  "leadetawidth          := leadingPhoton.superCluster.etaWidth",
-                                  "leadphiwidth          := leadingPhoton.superCluster.phiWidth",
-                                  "leads4ratio           := leadingPhoton.s4",
-                                  "leadoldr9             := leadingPhoton.old_r9",
-                                  "leadoldsieie          := leadingPhoton.sigmaIetaIeta",
-                                  "leadoldcovieip        := leadingPhoton.showerShapeVariables.sigmaIetaIphi",
-                                  "leadoldcovipip        := leadingPhoton.showerShapeVariables.sigmaIphiIphi",
-                                  "leadr9_5x5_by_3x3     := leadingPhoton.full5x5_r9/leadingPhoton.old_r9",
-                                  "leadPt                := leadingPhoton.et",
-                                  "leadEta               := leadingPhoton.eta",
-                                  "leadIDMVA             := leadingView.phoIdMvaWrtChosenVtx",
-                                  "leadChIsoRv           := leadingView.pfChIso03WrtChosenVtx",
-                                  "leadChIsoWv           := leadingPhoton.pfChgIsoWrtWorstVtx03",
-                                  "leadESSigma           := leadingPhoton.esEffSigmaRR",
-                                  "leadScRawE            := leadingPhoton.superCluster.rawEnergy",
-                                  "leadesE               := leadingPhoton.superCluster.preshowerEnergy",
-                                  "leadesEnovSCRawEn     := leadingPhoton.superCluster.preshowerEnergy()/leadingPhoton.superCluster.rawEnergy()",
-                                  "leadsigmaEoE          := leadingPhoton.sigEOverE",
-                                  "subleadHoE            := subLeadingPhoton.hadronicOverEm",
-                                  "subleadTrkIso         := subLeadingPhoton.trkSumPtHollowConeDR03",
-                                  "subleadPhIso          := subLeadingPhoton.pfPhoIso03",
-                                  "subleadPhIsoCorr      := subLeadingPhoton.pfPhoIso03Corr",
-                                  "subleadNeuIso         := subLeadingPhoton.pfNeutIso03",
-                                  "subleadfull5x5r9      := subLeadingPhoton.full5x5_r9",
-                                  "subleadfull5x5sieie   := subLeadingPhoton.full5x5_sigmaIetaIeta",
-                                  "subleadfull5x5covieip := subLeadingPhoton.sieip",
-                                  "subleadfull5x5covipip := subLeadingPhoton.sipip",
-                                  "subleadetawidth       := subLeadingPhoton.superCluster.etaWidth",
-                                  "subleadphiwidth       := subLeadingPhoton.superCluster.phiWidth",
-                                  "subleads4ratio        := subLeadingPhoton.s4",
-                                  "subleadoldr9          := subLeadingPhoton.old_r9",
-                                  "subleadoldsieie       := subLeadingPhoton.sigmaIetaIeta",
-                                  "subleadoldcovieip     := subLeadingPhoton.showerShapeVariables.sigmaIetaIphi",
-                                  "subleadoldcovipip     := subLeadingPhoton.showerShapeVariables.sigmaIphiIphi",
-                                  "subleadr9_5x5_by_3x3  := subLeadingPhoton.full5x5_r9/subLeadingPhoton.old_r9",
-                                  "subleadPt             := subLeadingPhoton.et",
-                                  "subleadEta            := subLeadingPhoton.eta",
-                                  "subIDMVA              := subLeadingView.phoIdMvaWrtChosenVtx",
-                                  "subleadChIsoRv        := subLeadingView.pfChIso03WrtChosenVtx",
-                                  "subleadChIsoWv        := subLeadingPhoton.pfChgIsoWrtWorstVtx03",
-                                  "subleadESSigma        := subLeadingPhoton.esEffSigmaRR",
-                                  "subleadScRawE         := subLeadingPhoton.superCluster.rawEnergy",
-                                  "subleadesE            := subLeadingPhoton.superCluster.preshowerEnergy",
-                                  "subleadesEnovSCRawEn  := subLeadingPhoton.superCluster.preshowerEnergy()/subLeadingPhoton.superCluster.rawEnergy()",
-                                  "mass[120,60,120]      := mass", 
-                                  "scEta                 := leadingPhoton.superCluster.eta",
-                                  "subleadsigmaEoE       := subLeadingPhoton.sigEOverE",
-                                  "sigmaMoM              := .5*sqrt(leadingPhoton.sigEOverE*leadingPhoton.sigEOverE+subLeadingPhoton.sigEOverE*subLeadingPhoton.sigEOverE)",
-                                  "vtxProb               := vtxProbMVA",
-                                  "cosdphi               := cos(leadingPhoton.phi-subLeadingPhoton.phi)",
-                                  "dipho_pt              := pt",
-                                  "nVtx                  := nVert",
-                                  ],
+                       variables=variables,
                        histograms=[]                                   
                        )
 process.diphotonDumper.nameTemplate ="zeevalidation_$SQRTS_$LABEL_$SUBCAT"
