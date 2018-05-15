@@ -222,6 +222,22 @@ float const Photon::findVertex0Float( const std::map<edm::Ptr<reco::Vertex>, flo
     return 0.;
 }
 
+edm::Ptr<reco::Vertex> Photon::vtx0() const {
+
+    // we assume that all the isolation maps contain the same vertices
+    // so we pick one
+    auto &mp = pfChgIso03_;
+
+    for( std::map<edm::Ptr<reco::Vertex>, float>::const_iterator it = mp.begin(); it != mp.end(); ++it ) {
+        if( it->first.key() == 0 ) {
+            return  it->first;
+        }
+    }
+
+    throw cms::Exception( "Missing Data" ) << "could not find vertex 0\n";;
+}
+
+
 float const Photon::findVertexFloat( const edm::Ptr<reco::Vertex> &vtx, const std::map<edm::Ptr<reco::Vertex>, float> &mp, bool lazy ) const
 {
     lazy = lazy && ( vtx.id() == edm::ProductID( 0, 0 ) );
@@ -245,6 +261,16 @@ float const Photon::findWorstIso( const std::map<edm::Ptr<reco::Vertex>, float> 
     return ret;
 }
 
+edm::Ptr<reco::Vertex> Photon::findWorstIsoVertex( const std::map<edm::Ptr<reco::Vertex>, float> &mp ) const {
+
+    auto max_entry = std::max_element(mp.begin(), mp.end(),
+                                      [] (auto &p1, auto &p2) {
+                                          return p1.second < p2.second;
+                                      }
+                                      );
+
+    return max_entry->first;
+}
 
 void Photon::updateEnergy( std::string key, float val )
 {
@@ -312,6 +338,8 @@ float const Photon::sigEOverE() const
     // Use uncertainty and error stored from reco because we want this fraction to be constant
     return ( getCorrectedEnergyError( getCandidateP4type() ) / getCorrectedEnergy( getCandidateP4type() ) );
 }
+
+
 // Local Variables:
 // mode:c++
 // indent-tabs-mode:nil

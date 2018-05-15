@@ -106,11 +106,19 @@ namespace flashgg {
         float const pfChgIso03WrtVtx0() const { return findVertex0Float( pfChgIso03_ ); }; // WARNING: no guarantee that vertex 0 is the correct one
         float const pfChgIso02WrtVtx0() const { return findVertex0Float( pfChgIso02_ ); }; // WARNING: no guarantee that vertex 0 is the correct one
 
+        /** @return vertex 0 */
+        edm::Ptr<reco::Vertex> vtx0() const;
+
         float const pfChgIsoWrtWorstVtx04() const {return pfChgIsoWrtWorstVtx04_;};
         float const pfChgIsoWrtWorstVtx03() const {return pfChgIsoWrtWorstVtx03_;};
         float const pfChgIsoWrtChosenVtx02() const {return pfChgIsoWrtChosenVtx02_;};
         float const pfChgIsoWrtChosenVtx03() const {return pfChgIsoWrtChosenVtx03_;};
+
+        /** @return the vertex with the highest PF charged isolation value in the map */
+        edm::Ptr<reco::Vertex> pfChgIsoWorstVtx03() const { return findWorstIsoVertex(pfChgIso03_); }
+
         float const esEffSigmaRR() const {return ESEffSigmaRR_;};
+
 
         void setExtraNeutIso( const std::string &key, float val ) { extraNeutralIsolations_[key] = val; };
         float const extraNeutIso( const std::string &key ) const
@@ -177,6 +185,9 @@ namespace flashgg {
         float const findVertexFloat( const edm::Ptr<reco::Vertex> &vtx, const std::map<edm::Ptr<reco::Vertex>, float> &mp, bool lazy ) const;
         float const findVertex0Float( const std::map<edm::Ptr<reco::Vertex>, float> &mp ) const;
         float const findWorstIso( const std::map<edm::Ptr<reco::Vertex>, float> &mp ) const;
+
+        /** @return the vertex with the worst (highest) isolation value of the given map */
+        edm::Ptr<reco::Vertex> findWorstIsoVertex( const std::map<edm::Ptr<reco::Vertex>, float> &mp ) const;
 
         float sipip_;
         float sieip_;
