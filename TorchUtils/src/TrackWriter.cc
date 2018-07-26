@@ -5,6 +5,15 @@
 
 #include "DataFormats/Common/interface/RefToPtr.h"
 
+#include "MagneticField/Engine/interface/MagneticField.h"
+#include "FastSimulation/BaseParticlePropagator/interface/BaseParticlePropagator.h"
+#include "FWCore/Framework/interface/EventSetup.h"
+#include "FWCore/Framework/interface/ESHandle.h"
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+
+#include "FastSimulation/Particle/interface/RawParticle.h"
+#include "FastSimulation/BaseParticlePropagator/interface/BaseParticlePropagator.h"
+
 
 #include <iostream>
 
@@ -128,9 +137,58 @@ namespace flashgg
 
   //----------------------------------------------------------------------
 
+  void TrackWriter::propagateToECAL(const pat::PackedCandidate &cand, 
+				    const reco::Vertex &vtx,
+				    double &etaAtEcal, double &phiAtEcal) {
+
+    // code adapted from RecoParticleFlow/PFTracking/src/PFTrackTransformer.cc
+    BaseParticlePropagator theParticle =
+      BaseParticlePropagator(
+			     RawParticle(XYZTLorentzVector(cand.px(),
+							   cand.py(),
+							   cand.pz(),
+							   cand.energy()),
+					 XYZTLorentzVector(vtx.x(),
+							   vtx.y(),
+							   vtx.z(),
+							   0.)),
+			     0.,0.,magneticField.z());
+
+    theParticle.setCharge(cand.charge());
+
+    // propagate to ECAL
+    theParticle.propagateToEcalEntrance(false);
+
+    // get the new momentum coordinates
+
+    if(theParticle.getSuccess() == 0) {
+      // propagation failed for some reason (e.g. did not intersect with ECAL barrel)
+      etaAtEcal = -9999;
+      phiAtEcal = -9999;
+    } else {
+      etaAtEcal = theParticle.eta();
+      phiAtEcal = theParticle.phi();
+    }
+  }
+
+  //----------------------------------------------------------------------
+
   TrackWriter::~TrackWriter() 
   {
   }
+
+  //----------------------------------------------------------------------
+
+  void 
+  TrackWriter::beginRun(const edm::Run& run, const edm::EventSetup& iSetup) {
+     
+    // from RecoParticleFlow/PFTracking/plugins/PFV0Producer.cc
+    edm::ESHandle<MagneticField> magneticField;
+    iSetup.get<IdealMagneticFieldRecord>().get(magneticField);
+  
+    this->magneticField = math::XYZVector(magneticField->inTesla(GlobalPoint(0,0,0)));
+  }
+
 
   //----------------------------------------------------------------------
 

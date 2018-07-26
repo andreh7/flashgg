@@ -8,6 +8,9 @@
 <use   name="FWCore/Common"/>
 <use   name="CommonTools/Utils"/>
 <use   name="boost_python"/>
+<use   name="FastSimulation/Particle"/>
+<use   name="FastSimulation/BaseParticlePropagator"/>
+
 <export>
   <lib   name="1"/>
 </export>

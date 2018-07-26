@@ -36,6 +36,8 @@ namespace flashgg {
         virtual void analyze( const edm::Event &, const edm::EventSetup & ) override;
         virtual void endJob() override;
 
+        virtual void beginRun(const edm::Run& run, const edm::EventSetup& iSetup);
+
         const bool isBarrel;
 
         edm::EDGetTokenT<edm::View<flashgg::DiPhotonCandidate> > diphotonToken_;

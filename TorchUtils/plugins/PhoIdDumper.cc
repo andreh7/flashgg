@@ -476,6 +476,14 @@ namespace flashgg {
 
     //----------------------------------------------------------------------
 
+    void 
+    PhoIdDumper::beginRun(const edm::Run& run, const edm::EventSetup& iSetup) {
+     
+        trackWriter->beginRun(run, iSetup);
+
+    }
+
+
 } // namespace flashgg
 
 typedef flashgg::PhoIdDumperBarrel FlashggPhoIdDumperBarrel;

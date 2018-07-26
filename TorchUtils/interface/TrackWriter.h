@@ -38,6 +38,8 @@ namespace flashgg
 
     const edm::Event *event;
 
+    math::XYZVector magneticField;
+
     /** things to write out.
 
 	First index is the photon index,
@@ -62,12 +64,18 @@ namespace flashgg
     /** see https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideEDMGetDataFromEvent#Consumes_and_Helpers */
     TrackWriter(edm::ParameterSet const& iPS, edm::ConsumesCollector && iC);
 
+    void beginRun(const edm::Run& run, const edm::EventSetup& iSetup);
+
     /** called at the beginning of each event */
     void newEvent(const edm::Event &event);
     
     /** finds tracks close to this photon and stores the corresponding data */
     void addPhoton(const edm::Ptr<pat::Photon> &photon, const edm::Ptr<reco::Vertex> &photonVertex,
 		   const flashgg::VertexCandidateMap &vtxcandmap);
+
+    void propagateToECAL(const pat::PackedCandidate &cand, 
+			 const reco::Vertex &vtx,
+			 double &etaAtEcal, double &phiAtEcal);
 
     virtual ~TrackWriter();
 
